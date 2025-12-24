@@ -2,11 +2,11 @@
 export CUDA_VISIBLE_DEVICES=$1
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
-# Huggingface settings
-export HF_ENDPOINT=https://hf-mirror.com
-export HF_TOKEN="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"
-export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
-export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
+# Huggingface settings (set your own token via env)
+export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
+export HF_TOKEN=${HF_TOKEN:-""}
+export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
+export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
 
 CONFIG_NAME=MarsRetrieval
 EXP_NAME=main_exp
