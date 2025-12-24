@@ -2,44 +2,40 @@ import logging
 
 import torch
 from torch.nn import functional as F
+from transformers import AutoImageProcessor, AutoModel
 
 from .base import ImageEncoderBase
 
 
 class DinoV3ImageEncoder(ImageEncoderBase):
-    """Optional DinoV3 wrapper for image-only retrieval."""
+    """DINOv3 image encoder via HuggingFace transformers."""
 
-    def __init__(self, checkpoint_path: str, device: torch.device, image_size: int = 448):
-        try:
-            import torchvision.transforms as T
-        except ImportError as exc:  # pragma: no cover - optional dependency
-            raise ImportError("torchvision is required for DINOv3 preprocessing.") from exc
-
-        try:
-            self.model = torch.hub.load(
-                repo_or_dir=checkpoint_path,
-                model="dinov3_vitb14",
-                source="local",
-                trust_repo=True,
-            )
-        except Exception as exc:  # pragma: no cover - optional dependency
-            raise RuntimeError(
-                "Failed to load DINOv3 model. Ensure checkpoint_path points to a local repo with hubconf.py."
-            ) from exc
-
-        self.model.eval().to(device)
+    def __init__(self, model_id: str, device: torch.device, pooling: str = "cls"):
         self.device = device
-        self.preprocess = T.Compose(
-            [
-                T.Resize(image_size, antialias=True),
-                T.CenterCrop(image_size),
-                T.ToTensor(),
-                T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            ]
-        )
+        self.pooling = pooling.lower()
+        self.processor = AutoImageProcessor.from_pretrained(model_id)
+        self.model = AutoModel.from_pretrained(model_id)
+        self.model.eval().to(device)
+
+        # Preprocess returns a tensor suitable for DataLoader collation
+        def _hf_preprocess(img):
+            px = self.processor(images=img, return_tensors="pt")["pixel_values"]
+            return px[0]
+
+        self.preprocess = _hf_preprocess
 
     def encode_image(self, images: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            feats = self.model(images.to(self.device))
+            outputs = self.model(images.to(self.device))
+            if hasattr(outputs, "last_hidden_state"):
+                token_feats = outputs.last_hidden_state
+                if self.pooling == "mean":
+                    feats = token_feats.mean(dim=1)
+                else:
+                    feats = token_feats[:, 0]
+            elif hasattr(outputs, "pooler_output"):
+                feats = outputs.pooler_output
+            else:
+                feats = outputs[0][:, 0]
             feats = F.normalize(feats, p=2, dim=-1)
         return feats

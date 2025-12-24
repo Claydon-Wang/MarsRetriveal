@@ -102,8 +102,6 @@ def _merge_args(args, args_dynamic):
         args.output_dir = os.path.join(
             args.logs, exp_prefix, model_tag, pretrained_tag, resume_tag, query_mode_tag, query_tag
         )
-    if args_dynamic.dinov3_checkpoint:
-        args.dinov3_checkpoint = args_dynamic.dinov3_checkpoint
     if args_dynamic.radius_deg is not None:
         args.radius_deg = args_dynamic.radius_deg
     if args_dynamic.eval_max_k is not None:

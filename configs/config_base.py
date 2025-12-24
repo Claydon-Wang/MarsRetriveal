@@ -30,6 +30,7 @@ class Config:
     pretrained_image = False
     cache_dir = None
     siglip = False
+    dinov3_pooling = "cls"  # cls | mean
 
     # --------------------- Data / DB / Eval ---------------------
     project_dir = None

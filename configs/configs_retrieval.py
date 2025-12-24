@@ -13,7 +13,6 @@ class MarsRetrieval(Config):
     force_quick_gelu = True
     resume_post_train = None
     logs = "./logs"
-    dinov3_checkpoint = None
     ground_truth_csv = None
     feature_dim = 768
     seed = 1

@@ -37,7 +37,6 @@ def _parse_args():
     # Encoders
     parser.add_argument("--image_encoder_type", type=str, default=None, help="Image encoder type (e.g., openclip, dinov3).")
     parser.add_argument("--text_encoder_type", type=str, default=None, help="Text encoder type (e.g., openclip, none).")
-    parser.add_argument("--dinov3_checkpoint", type=str, default=None, help="Local repo path for DINOv3 hubconf.")
 
     # Evaluation
     parser.add_argument("--ground_truth_csv", type=str, default=None, help="Optional GT CSV for evaluation.")

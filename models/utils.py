@@ -34,9 +34,9 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
         return OpenCLIPImageEncoder(components, device)
 
     if encoder_type.lower() == "dinov3":
-        if not getattr(args, "dinov3_checkpoint", None):
-            raise ValueError("dinov3_checkpoint must be provided when using the DINOv3 image encoder.")
-        return DinoV3ImageEncoder(args.dinov3_checkpoint, device, image_size=args.force_image_size)
+        model_id = getattr(args, "model", None) or "facebook/dinov3-vitl16-pretrain-lvd1689m"
+        pooling = getattr(args, "dinov3_pooling", "cls")
+        return DinoV3ImageEncoder(model_id, device, pooling=pooling)
 
     raise ValueError(f"Unsupported image encoder type: {encoder_type}")
 

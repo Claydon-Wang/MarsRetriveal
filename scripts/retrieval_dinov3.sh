@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 
+# Huggingface settings (set your own token via env)
+export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
+export HF_TOKEN=${HF_TOKEN:-""}
+export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
+export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
+
 CONFIG_NAME=MarsRetrieval
 EXP_NAME=dinov3_exp
 
@@ -13,10 +19,8 @@ GROUND_TRUTH_CSV=${GROUND_TRUTH_CSV:-"/mnt/sharedata/ssd_large/Planet/MarsRetrie
 # model / encoder settings (DINOv3)
 IMAGE_ENCODER_TYPE=dinov3
 TEXT_ENCODER_TYPE=none
-DINOV3_CHECKPOINT=${DINOV3_CHECKPOINT:-"/path/to/dinov3_repo"}  # hubconf 目录
-MODEL_NAME=${MODEL_NAME:-"dinov3_vitb14"}    # 仅用于日志/命名
-PRETRAINED=${PRETRAINED:-"dinov3"}           # 仅用于日志/命名
-RESUME_POST_TRAIN=${RESUME_POST_TRAIN:-""}
+MODEL_NAME=facebook/dinov3-vitl16-pretrain-lvd1689m  # HF 模型 ID
+PRETRAINED=hf  # 仅用于日志/命名
 
 # run
 python main.py \
@@ -28,8 +32,5 @@ python main.py \
   --ground_truth_csv "${GROUND_TRUTH_CSV}" \
   --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
   --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-  --dinov3_checkpoint "${DINOV3_CHECKPOINT}" \
   --model_name "${MODEL_NAME}" \
   --pretrained "${PRETRAINED}" \
-  ${RESUME_POST_TRAIN:+--resume_post_train "${RESUME_POST_TRAIN}"} \
-  ${OUTPUT_DIR:+--output_dir "${OUTPUT_DIR}"}
