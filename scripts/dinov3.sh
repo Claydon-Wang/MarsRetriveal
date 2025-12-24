@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 
-# Huggingface settings (set your own token via env)
-export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
-export HF_TOKEN=${HF_TOKEN:-""}
-export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
-export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
+# Huggingface settings
+export HF_ENDPOINT=https://hf-mirror.com
+export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
+export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
 CONFIG_NAME=MarsRetrieval
 EXP_NAME=dinov3_exp

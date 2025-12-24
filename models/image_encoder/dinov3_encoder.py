@@ -2,7 +2,12 @@ import logging
 
 import torch
 from torch.nn import functional as F
-from transformers import AutoImageProcessor, AutoModel
+
+try:
+    from transformers import AutoImageProcessor, AutoModel
+except ImportError:  # pragma: no cover - older transformers
+    from transformers import AutoProcessor as AutoImageProcessor  # type: ignore
+    from transformers import AutoModel  # type: ignore
 
 from .base import ImageEncoderBase
 

@@ -4,7 +4,6 @@ export PATH=~/.conda/envs/retrieval/bin:$PATH
 
 # Huggingface settings
 export HF_ENDPOINT=https://hf-mirror.com
-export HF_TOKEN="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"
 export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
 export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
@@ -23,7 +22,7 @@ PRETRAINED=dfn2b
 RESUME_POST_TRAIN=/mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
-
+export HF_TOKEN=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
 
 # run
 python main.py \

@@ -43,7 +43,14 @@ def _merge_args(args, args_dynamic):
     args.image_encoder_type = explicit_image_type or getattr(args, "image_encoder_type", "openclip")
     args.text_encoder_type = args_dynamic.text_encoder_type or getattr(args, "text_encoder_type", None)
     model_spec = args_dynamic.model_name or args.model
-    model_family, model_name = _parse_model_spec(model_spec, args.image_encoder_type)
+    # Non-openclip encoders: keep full model_spec (e.g., HF IDs with '/')
+    if args.image_encoder_type != "openclip":
+        model_family, model_name = args.image_encoder_type, model_spec
+    else:
+        if "/" in model_spec:
+            model_family, model_name = _parse_model_spec(model_spec, args.image_encoder_type)
+        else:
+            model_family, model_name = args.image_encoder_type, model_spec
     args.model = model_name
     # If the model spec carried a family prefix, sync image encoder type unless explicitly overridden
     if explicit_image_type is None and model_family != args.image_encoder_type:

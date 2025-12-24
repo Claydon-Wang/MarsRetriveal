@@ -108,6 +108,16 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 coordinates = pickle.load(f)
         else:
             logging.info("Preparing database features from thumbnails in %s", thumb_dir)
+            # Optional DataParallel during DB build if multiple GPUs are visible
+            model_wrapped = False
+            if torch.cuda.is_available() and hasattr(image_encoder, "model"):
+                visible = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+                dev_ids = [d for d in visible.split(",") if d.strip()] if visible else list(range(torch.cuda.device_count()))
+                if len(dev_ids) > 1 and not isinstance(image_encoder.model, torch.nn.DataParallel):
+                    logging.info("Wrapping image encoder with DataParallel across devices: %s", dev_ids)
+                    image_encoder.model = torch.nn.DataParallel(image_encoder.model, device_ids=list(range(len(dev_ids))))
+                    model_wrapped = True
+
             target_dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
             target_loader = DataLoader(
                 target_dataset,
@@ -132,6 +142,10 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 coordinates.extend(batch_coordinates)
 
             features = np.concatenate(features, axis=0).astype("float32")
+
+            # unwrap DataParallel to avoid side effects in later use
+            if model_wrapped and isinstance(image_encoder.model, torch.nn.DataParallel):
+                image_encoder.model = image_encoder.model.module
 
             np.save(feature_save_path, features)
             with open(metadata_save_path, "wb") as f:
