@@ -31,18 +31,43 @@ def build_openclip_components(args, device) -> OpenCLIPComponents:
         model_kwargs["init_logit_scale"] = torch.log(torch.tensor(10.0))
         model_kwargs["init_logit_bias"] = -10
 
-    model, preprocess_train, preprocess_val = create_model_and_transforms(
-        args.model,
-        args.pretrained,
-        precision=args.precision,
-        device=device,
-        force_quick_gelu=args.force_quick_gelu,
-        force_image_size=args.force_image_size,
-        image_mean=args.image_mean,
-        image_std=args.image_std,
-        output_dict=True,
-        **model_kwargs,
-    )
+    model_id = args.model
+    pretrained_tag = args.pretrained
+    try:
+        model, preprocess_train, preprocess_val = create_model_and_transforms(
+            model_id,
+            pretrained_tag,
+            precision=args.precision,
+            device=device,
+            force_quick_gelu=args.force_quick_gelu,
+            force_image_size=args.force_image_size,
+            image_mean=args.image_mean,
+            image_std=args.image_std,
+            output_dict=True,
+            **model_kwargs,
+        )
+    except RuntimeError as exc:
+        # Some open_clip versions don't accept hf-hub: as the pretrained argument.
+        if isinstance(pretrained_tag, str) and pretrained_tag.startswith("hf-hub:"):
+            logging.info(
+                "Retrying hf-hub load using single-argument model id: %s (error: %s)",
+                pretrained_tag,
+                exc,
+            )
+            model_id = pretrained_tag
+            model, preprocess_train, preprocess_val = create_model_and_transforms(
+                model_id,
+                precision=args.precision,
+                device=device,
+                force_quick_gelu=args.force_quick_gelu,
+                force_image_size=args.force_image_size,
+                image_mean=args.image_mean,
+                image_std=args.image_std,
+                output_dict=True,
+                **model_kwargs,
+            )
+        else:
+            raise
 
     if args.resume_post_train is not None and load_checkpoint is not None:
         logging.info("Loading checkpoint from %s", args.resume_post_train)
@@ -56,7 +81,7 @@ def build_openclip_components(args, device) -> OpenCLIPComponents:
         if incompatible_keys and (incompatible_keys.missing_keys or incompatible_keys.unexpected_keys):
             logging.warning("Incompatible keys while loading checkpoint: %s", incompatible_keys)
 
-    tokenizer = get_tokenizer(args.model)
+    tokenizer = get_tokenizer(model_id)
     return OpenCLIPComponents(
         model=model,
         preprocess_train=preprocess_train,

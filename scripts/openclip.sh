@@ -16,8 +16,10 @@ QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/i
 GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv
 
 # model (OpenCLIP by default)
-MODEL_NAME=ViT-L-14-quickgelu
-PRETRAINED=dfn2b
+# MODEL_NAME=ViT-L-14-quickgelu
+# PRETRAINED=dfn2b
+MODEL_NAME=PE-Core-L-14-336
+PRETRAINED=hf-hub:timm/PE-Core-L-14-336
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
 

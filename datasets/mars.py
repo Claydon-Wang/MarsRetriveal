@@ -214,122 +214,277 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             pickle.dump(coordinates, f)
         return shard_paths
 
+    # def build_distributed(self, args, image_encoder, delta: float, rank: int, world_size: int) -> Dict:
+    #     db_dir, thumb_dir = self._resolve_paths(args, delta)
+    #     shard_dir = os.path.join(db_dir, "shards")
+    #     os.makedirs(shard_dir, exist_ok=True)
+
+    #     feature_save_path = os.path.join(db_dir, "features.npy")
+    #     metadata_save_path = os.path.join(db_dir, "metadata.pkl")
+    #     coordinates_save_path = os.path.join(db_dir, "coordinates.pkl")
+
+    #     # --- 0) 全rank一致判断 DB 是否存在（避免 collective 顺序不一致） ---
+    #     local_exists = int(
+    #         os.path.exists(feature_save_path)
+    #         and os.path.exists(metadata_save_path)
+    #         and os.path.exists(coordinates_save_path)
+    #     )
+    #     exists = torch.tensor(local_exists, device="cuda" if torch.cuda.is_available() else "cpu")
+    #     dist.broadcast(exists, src=0)
+    #     exists = int(exists.item())
+
+    #     if exists:
+    #         out = {}
+    #         if rank == 0:
+    #             features = np.load(feature_save_path, mmap_mode="r")
+    #             with open(metadata_save_path, "rb") as f:
+    #                 metadata = pickle.load(f)
+    #             with open(coordinates_save_path, "rb") as f:
+    #                 coordinates = pickle.load(f)
+    #             if getattr(args, "feature_dim", None) is None:
+    #                 args.feature_dim = features.shape[1]
+    #             index = faiss.IndexFlatIP(args.feature_dim)
+    #             # 分块 add，避免一次性复制
+    #             bs = 200000
+    #             for i in range(0, features.shape[0], bs):
+    #                 index.add(np.asarray(features[i:i+bs]))
+    #             out = {"index": index, "metadata": metadata, "coordinates": coordinates,
+    #                 "db_dir": db_dir, "thumb_dir": thumb_dir}
+
+    #         dist.barrier()  # 所有rank对齐一次后一起 return
+    #         return out
+
+    #     # --- 1) 每个rank构建自己的 shard ---
+    #     dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
+    #     indices = list(range(rank, len(dataset), world_size))
+    #     self._build_shard(args, image_encoder, thumb_dir, indices, shard_dir, rank)
+
+    #     print(f"[rank {rank}] before barrier shard", flush=True)
+    #     dist.barrier()  # shard 完成（所有rank）
+    #     print(f"[rank {rank}] after barrier shard", flush=True)
+
+    #     # --- 2) rank0 合并 ---
+    #     out = {}
+    #     if rank == 0:
+    #         feature_paths = [os.path.join(shard_dir, f"features_rank{r}.npy") for r in range(world_size)]
+    #         metadata_paths = [os.path.join(shard_dir, f"metadata_rank{r}.pkl") for r in range(world_size)]
+    #         coord_paths = [os.path.join(shard_dir, f"coordinates_rank{r}.pkl") for r in range(world_size)]
+
+    #         shard_ns = []
+    #         shard_dim = getattr(args, "feature_dim", None)
+    #         for p in feature_paths:
+    #             if os.path.exists(p):
+    #                 arr = np.load(p, mmap_mode="r")
+    #                 shard_ns.append(arr.shape[0])
+    #                 if shard_dim is None and arr.shape[0] > 0:
+    #                     shard_dim = arr.shape[1]
+    #             else:
+    #                 shard_ns.append(0)
+
+    #         total_rows = sum(shard_ns)
+    #         if shard_dim is None:
+    #             shard_dim = args.feature_dim
+    #         args.feature_dim = shard_dim
+    #         D = shard_dim
+
+    #         final = open_memmap(feature_save_path, mode="w+", dtype="float32", shape=(total_rows, D))
+    #         off = 0
+    #         for p, n in zip(feature_paths, shard_ns):
+    #             if n == 0:
+    #                 continue
+    #             part = np.load(p, mmap_mode="r")
+    #             final[off:off+n] = part
+    #             off += n
+    #         del final
+
+    #         metadata, coordinates = [], []
+    #         for mp, cp in zip(metadata_paths, coord_paths):
+    #             if os.path.exists(mp):
+    #                 with open(mp, "rb") as f:
+    #                     metadata.extend(pickle.load(f))
+    #             if os.path.exists(cp):
+    #                 with open(cp, "rb") as f:
+    #                     coordinates.extend(pickle.load(f))
+
+    #         with open(metadata_save_path, "wb") as f:
+    #             pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
+    #         with open(coordinates_save_path, "wb") as f:
+    #             pickle.dump(coordinates, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    #         features = np.load(feature_save_path, mmap_mode="r")
+    #         index = faiss.IndexFlatIP(D)
+    #         bs = 200000
+    #         for i in range(0, total_rows, bs):
+    #             index.add(np.asarray(features[i:i+bs]))
+
+    #         # clean shards
+    #         for p in feature_paths + metadata_paths + coord_paths:
+    #             if os.path.exists(p):
+    #                 os.remove(p)
+    #         try:
+    #             os.rmdir(shard_dir)
+    #         except OSError:
+    #             pass
+
+    #         out = {"index": index, "metadata": metadata, "coordinates": coordinates,
+    #             "db_dir": db_dir, "thumb_dir": thumb_dir}
+
+    #     print(f"[rank {rank}] before barrier merge", flush=True)
+    #     dist.barrier()  # merge 完成（所有rank对齐）
+    #     print(f"[rank {rank}] after barrier merge", flush=True)
+    #     return out
+
     def build_distributed(self, args, image_encoder, delta: float, rank: int, world_size: int) -> Dict:
-        db_dir, thumb_dir = self._resolve_paths(args, delta)
-        shard_dir = os.path.join(db_dir, "shards")
-        os.makedirs(shard_dir, exist_ok=True)
+            import time  # 引入 time 模块用于休眠
+            db_dir, thumb_dir = self._resolve_paths(args, delta)
+            shard_dir = os.path.join(db_dir, "shards")
+            os.makedirs(shard_dir, exist_ok=True)
 
-        feature_save_path = os.path.join(db_dir, "features.npy")
-        metadata_save_path = os.path.join(db_dir, "metadata.pkl")
-        coordinates_save_path = os.path.join(db_dir, "coordinates.pkl")
+            feature_save_path = os.path.join(db_dir, "features.npy")
+            metadata_save_path = os.path.join(db_dir, "metadata.pkl")
+            coordinates_save_path = os.path.join(db_dir, "coordinates.pkl")
 
-        # --- 0) 全rank一致判断 DB 是否存在（避免 collective 顺序不一致） ---
-        local_exists = int(
-            os.path.exists(feature_save_path)
-            and os.path.exists(metadata_save_path)
-            and os.path.exists(coordinates_save_path)
-        )
-        exists = torch.tensor(local_exists, device="cuda" if torch.cuda.is_available() else "cpu")
-        dist.broadcast(exists, src=0)
-        exists = int(exists.item())
+            # --- 0) 全rank一致判断 DB 是否存在 ---
+            local_exists = int(
+                os.path.exists(feature_save_path)
+                and os.path.exists(metadata_save_path)
+                and os.path.exists(coordinates_save_path)
+            )
+            exists = torch.tensor(local_exists, device="cuda" if torch.cuda.is_available() else "cpu")
+            dist.broadcast(exists, src=0)
+            exists = int(exists.item())
 
-        if exists:
+            if exists:
+                # ... (这部分保持不变，加载已有DB的代码) ...
+                out = {}
+                if rank == 0:
+                    features = np.load(feature_save_path, mmap_mode="r")
+                    with open(metadata_save_path, "rb") as f:
+                        metadata = pickle.load(f)
+                    with open(coordinates_save_path, "rb") as f:
+                        coordinates = pickle.load(f)
+                    if getattr(args, "feature_dim", None) is None:
+                        args.feature_dim = features.shape[1]
+                    index = faiss.IndexFlatIP(args.feature_dim)
+                    bs = 200000
+                    for i in range(0, features.shape[0], bs):
+                        index.add(np.asarray(features[i:i+bs]))
+                    out = {"index": index, "metadata": metadata, "coordinates": coordinates,
+                        "db_dir": db_dir, "thumb_dir": thumb_dir}
+                dist.barrier()
+                return out
+
+            # --- 1) 每个rank构建自己的 shard ---
+            dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
+            indices = list(range(rank, len(dataset), world_size))
+            self._build_shard(args, image_encoder, thumb_dir, indices, shard_dir, rank)
+
+            # shard 完成
+            dist.barrier()
+
+            # --- 2) rank0 合并 (关键修改区域) ---
             out = {}
+            
+            # 定义一个简单的标志文件路径，用于通知其他 Rank
+            flag_file = os.path.join(shard_dir, "merge_done.flag")
+
             if rank == 0:
-                features = np.load(feature_save_path, mmap_mode="r")
-                with open(metadata_save_path, "rb") as f:
-                    metadata = pickle.load(f)
-                with open(coordinates_save_path, "rb") as f:
-                    coordinates = pickle.load(f)
-                if getattr(args, "feature_dim", None) is None:
-                    args.feature_dim = features.shape[1]
-                index = faiss.IndexFlatIP(args.feature_dim)
-                # 分块 add，避免一次性复制
-                bs = 200000
-                for i in range(0, features.shape[0], bs):
-                    index.add(np.asarray(features[i:i+bs]))
-                out = {"index": index, "metadata": metadata, "coordinates": coordinates,
-                    "db_dir": db_dir, "thumb_dir": thumb_dir}
+                try:
+                    logging.info("Rank 0 starting merge...")
+                    feature_paths = [os.path.join(shard_dir, f"features_rank{r}.npy") for r in range(world_size)]
+                    metadata_paths = [os.path.join(shard_dir, f"metadata_rank{r}.pkl") for r in range(world_size)]
+                    coord_paths = [os.path.join(shard_dir, f"coordinates_rank{r}.pkl") for r in range(world_size)]
 
-            dist.barrier()  # 所有rank对齐一次后一起 return
+                    # 计算总行数
+                    shard_ns = []
+                    shard_dim = getattr(args, "feature_dim", None)
+                    for p in feature_paths:
+                        if os.path.exists(p):
+                            # 只读取 shape，不加载数据，极快
+                            arr_shape = np.load(p, mmap_mode="r").shape
+                            shard_ns.append(arr_shape[0])
+                            if shard_dim is None and arr_shape[0] > 0:
+                                shard_dim = arr_shape[1]
+                        else:
+                            shard_ns.append(0)
+
+                    total_rows = sum(shard_ns)
+                    if shard_dim is None:
+                        shard_dim = args.feature_dim
+                    args.feature_dim = shard_dim
+                    D = shard_dim
+
+                    # 开始写入大文件
+                    final = open_memmap(feature_save_path, mode="w+", dtype="float32", shape=(total_rows, D))
+                    off = 0
+                    for i, (p, n) in enumerate(zip(feature_paths, shard_ns)):
+                        if n == 0:
+                            continue
+                        # 逐个 shard 读取并写入
+                        part = np.load(p, mmap_mode="r")
+                        final[off:off+n] = part
+                        off += n
+                        # ### 优化：每处理一个，手动释放内存引用
+                        del part 
+                    del final  # 刷新到磁盘
+
+                    # 合并 Metadata
+                    metadata, coordinates = [], []
+                    for mp, cp in zip(metadata_paths, coord_paths):
+                        if os.path.exists(mp):
+                            with open(mp, "rb") as f:
+                                metadata.extend(pickle.load(f))
+                        if os.path.exists(cp):
+                            with open(cp, "rb") as f:
+                                coordinates.extend(pickle.load(f))
+
+                    with open(metadata_save_path, "wb") as f:
+                        pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
+                    with open(coordinates_save_path, "wb") as f:
+                        pickle.dump(coordinates, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+                    # 构建 Index
+                    features = np.load(feature_save_path, mmap_mode="r")
+                    index = faiss.IndexFlatIP(D)
+                    bs = 200000
+                    for i in range(0, total_rows, bs):
+                        index.add(np.asarray(features[i:i+bs]))
+
+                    # 清理临时文件
+                    for p in feature_paths + metadata_paths + coord_paths:
+                        if os.path.exists(p):
+                            os.remove(p)
+                    
+                    out = {"index": index, "metadata": metadata, "coordinates": coordinates,
+                        "db_dir": db_dir, "thumb_dir": thumb_dir}
+                    
+                    # ### 关键步骤：Rank 0 工作完成后，写入一个标志文件
+                    with open(flag_file, "w") as f:
+                        f.write("done")
+                    logging.info("Rank 0 merge finished.")
+
+                except Exception as e:
+                    logging.error(f"Rank 0 merge failed: {e}")
+                    # 即使失败也要抛出，防止其他进程死锁
+                    raise e
+            
+            else:
+                # ### 关键修改：Rank 1-7 不直接用 barrier，而是轮询检查文件
+                # 这样它们会 sleep 释放 CPU 资源给 Rank 0
+                logging.info(f"Rank {rank} waiting for Rank 0 to merge...")
+                while not os.path.exists(flag_file):
+                    time.sleep(2)  # 每 2 秒看一眼，不占 CPU
+                logging.info(f"Rank {rank} detected merge done.")
+
+            # 这里再用 barrier 确保大家状态一致，此时不会卡死，因为 Rank 0 已经完事了
+            dist.barrier()
+            
+            # Rank 0 负责清理标志文件
+            if rank == 0:
+                try:
+                    os.remove(flag_file)
+                    os.rmdir(shard_dir)
+                except OSError:
+                    pass
+
             return out
-
-        # --- 1) 每个rank构建自己的 shard ---
-        dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
-        indices = list(range(rank, len(dataset), world_size))
-        self._build_shard(args, image_encoder, thumb_dir, indices, shard_dir, rank)
-
-        print(f"[rank {rank}] before barrier shard", flush=True)
-        dist.barrier()  # shard 完成（所有rank）
-        print(f"[rank {rank}] after barrier shard", flush=True)
-
-        # --- 2) rank0 合并 ---
-        out = {}
-        if rank == 0:
-            feature_paths = [os.path.join(shard_dir, f"features_rank{r}.npy") for r in range(world_size)]
-            metadata_paths = [os.path.join(shard_dir, f"metadata_rank{r}.pkl") for r in range(world_size)]
-            coord_paths = [os.path.join(shard_dir, f"coordinates_rank{r}.pkl") for r in range(world_size)]
-
-            shard_ns = []
-            shard_dim = getattr(args, "feature_dim", None)
-            for p in feature_paths:
-                if os.path.exists(p):
-                    arr = np.load(p, mmap_mode="r")
-                    shard_ns.append(arr.shape[0])
-                    if shard_dim is None and arr.shape[0] > 0:
-                        shard_dim = arr.shape[1]
-                else:
-                    shard_ns.append(0)
-
-            total_rows = sum(shard_ns)
-            if shard_dim is None:
-                shard_dim = args.feature_dim
-            args.feature_dim = shard_dim
-            D = shard_dim
-
-            final = open_memmap(feature_save_path, mode="w+", dtype="float32", shape=(total_rows, D))
-            off = 0
-            for p, n in zip(feature_paths, shard_ns):
-                if n == 0:
-                    continue
-                part = np.load(p, mmap_mode="r")
-                final[off:off+n] = part
-                off += n
-            del final
-
-            metadata, coordinates = [], []
-            for mp, cp in zip(metadata_paths, coord_paths):
-                if os.path.exists(mp):
-                    with open(mp, "rb") as f:
-                        metadata.extend(pickle.load(f))
-                if os.path.exists(cp):
-                    with open(cp, "rb") as f:
-                        coordinates.extend(pickle.load(f))
-
-            with open(metadata_save_path, "wb") as f:
-                pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
-            with open(coordinates_save_path, "wb") as f:
-                pickle.dump(coordinates, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-            features = np.load(feature_save_path, mmap_mode="r")
-            index = faiss.IndexFlatIP(D)
-            bs = 200000
-            for i in range(0, total_rows, bs):
-                index.add(np.asarray(features[i:i+bs]))
-
-            # clean shards
-            for p in feature_paths + metadata_paths + coord_paths:
-                if os.path.exists(p):
-                    os.remove(p)
-            try:
-                os.rmdir(shard_dir)
-            except OSError:
-                pass
-
-            out = {"index": index, "metadata": metadata, "coordinates": coordinates,
-                "db_dir": db_dir, "thumb_dir": thumb_dir}
-
-        print(f"[rank {rank}] before barrier merge", flush=True)
-        dist.barrier()  # merge 完成（所有rank对齐）
-        print(f"[rank {rank}] after barrier merge", flush=True)
-        return out
