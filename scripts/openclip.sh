@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=$1
+# Usage: bash scripts/openclip.sh 0,1,2,3 (or export CUDA_VISIBLE_DEVICES beforehand)
+export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
 # Huggingface settings
@@ -22,9 +23,21 @@ PRETRAINED=dfn2b
 RESUME_POST_TRAIN=/mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
-export HF_TOKEN=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
 
-# run
+
+NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
+# optional distributed DB build (skips if DB already exists)
+if [[ "${NPROC}" -gt 1 ]]; then
+  torchrun --nproc_per_node=${NPROC} main_db_build.py \
+    --config_name "${CONFIG_NAME}" \
+    --exp_name "${EXP_NAME}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "none" \
+    --model_name "${MODEL_NAME}" \
+    --pretrained "${PRETRAINED}"
+fi
+
+# run retrieval
 python main.py \
   --config_name "${CONFIG_NAME}" \
   --exp_name "${EXP_NAME}" \

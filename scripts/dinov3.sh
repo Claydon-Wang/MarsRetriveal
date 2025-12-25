@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+# Usage: bash scripts/dinov3.sh 0,1,2,3  (or export CUDA_VISIBLE_DEVICES beforehand)
+export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 
 # Huggingface settings
 export HF_ENDPOINT=https://hf-mirror.com
 export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
 export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
-CONFIG_NAME=MarsRetrieval
+CONFIG_NAME=MarsRetrievalDinoV3
 EXP_NAME=dinov3_exp
 
 # query settings
 QUERY_MODE=image   # image | text | hybrid (DINOv3 仅支持 image)
 QUERY_TEXT=yardangs  # 用于 ground truth 选择，可用下划线代替空格
-QUERY_IMAGES=${QUERY_IMAGES:-"/path/to/query.jpg"}  # 单图、目录或空格分隔多图
-GROUND_TRUTH_CSV=${GROUND_TRUTH_CSV:-"/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv"}
+QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/image_queries/${QUERY_TEXT}
+GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv
 
 # model / encoder settings (DINOv3)
 IMAGE_ENCODER_TYPE=dinov3
@@ -21,7 +22,20 @@ TEXT_ENCODER_TYPE=none
 MODEL_NAME=facebook/dinov3-vitl16-pretrain-lvd1689m  # HF 模型 ID
 PRETRAINED=hf  # 仅用于日志/命名
 
-# run
+# optional distributed DB build (skips if DB already exists)
+NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
+if [[ "${NPROC}" -gt 1 ]]; then
+  echo "Building DB with torchrun on ${NPROC} GPUs: ${CUDA_VISIBLE_DEVICES}"
+  torchrun --nproc_per_node=${NPROC} main_db_build.py \
+    --config_name "${CONFIG_NAME}" \
+    --exp_name "${EXP_NAME}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "none" \
+    --model_name "${MODEL_NAME}" \
+    --pretrained "${PRETRAINED}"
+fi
+
+# run retrieval
 python main.py \
   --config_name "${CONFIG_NAME}" \
   --exp_name "${EXP_NAME}" \

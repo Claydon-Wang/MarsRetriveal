@@ -33,3 +33,7 @@ class MarsRetrievalSIGLIP(MarsRetrieval):
     force_image_size = 512
     feature_dim = 1024
     force_quick_gelu = False
+
+@dataclass
+class MarsRetrievalDinoV3(MarsRetrieval):
+    feature_dim = 1024
