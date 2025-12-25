@@ -25,7 +25,7 @@ class Config:
     image_mean = None
     image_std = None
     siglip = False
-    dinov3_pooling = "cls"  # cls | mean
+    resume_post_train = None
 
     # --------------------- Data / DB / Eval ---------------------
     project_dir = None

@@ -90,7 +90,7 @@ def _merge_args(args, args_dynamic):
         exp_prefix = _slugify(args.name)
         model_tag = _slugify(f"{args.image_encoder_type}_{args.model}")
         pretrained_tag = _slugify(args.pretrained or "pretrained")
-        if args.resume_post_train:
+        if getattr(args_dynamic, "resume_post_train", None):
             parts = args.resume_post_train.strip("/").split("/")[-3:]
             if parts and parts[-1].endswith(".pt"):
                 parts[-1] = parts[-1].rsplit(".", 1)[0]

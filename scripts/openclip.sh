@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-# Usage: bash scripts/openclip.sh 0,1,2,3 (or export CUDA_VISIBLE_DEVICES beforehand)
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
