@@ -8,7 +8,7 @@ export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
 export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
 CONFIG_NAME=MarsRetrievalDinoV3
-EXP_NAME=dinov3_exp
+EXP_NAME=main_exp
 
 # query settings
 QUERY_MODE=image   # image | text | hybrid (DINOv3 仅支持 image)

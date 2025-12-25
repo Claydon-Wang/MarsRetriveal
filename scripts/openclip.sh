@@ -12,8 +12,8 @@ CONFIG_NAME=MarsRetrieval
 EXP_NAME=main_exp
 
 # query settings
-QUERY_MODE=text   # image / text / hybrid
-QUERY_TEXT=pitted_cones # alluvial_fans / glacier-like_form / landslides / pitted_cones  / slope_streaks / yardangs  
+QUERY_MODE=image   # image / text / hybrid
+QUERY_TEXT=yardangs # alluvial_fans / glacier-like_form / landslides / pitted_cones  / slope_streaks / yardangs  
 QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/image_queries/${QUERY_TEXT}
 GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv
 
