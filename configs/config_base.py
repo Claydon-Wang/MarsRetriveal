@@ -31,7 +31,7 @@ class Config:
     project_dir = None
     database_root = None
     delta_degree = 0.2
-    workers = 8
+    workers = 4
     batch_size_database = 256
     top_k = 20000
     eval_max_k = 20000

@@ -59,7 +59,7 @@ def _merge_args(args, args_dynamic):
         args.image_encoder_type = model_family
     # Default text encoder type follows the (possibly inferred) image encoder type if not explicitly set
     if args.text_encoder_type is None:
-        if args.image_encoder_type in ("openclip", "jina"):
+        if args.image_encoder_type in ("openclip", "jina", "bge-vl"):
             args.text_encoder_type = args.image_encoder_type
         else:
             args.text_encoder_type = "none"

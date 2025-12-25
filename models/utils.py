@@ -2,14 +2,17 @@ import logging
 from typing import Optional
 
 from .image_encoder.base import ImageEncoderBase
-from .image_encoder.dinov3_encoder import DinoV3ImageEncoder
-from .image_encoder.jina_encoder import JinaImageEncoder
-from .image_encoder.openclip_encoder import OpenCLIPImageEncoder
+from .image_encoder.bgevl_image_encoder import BGEVLImageEncoder
+from .image_encoder.dinov3_image_encoder import DinoV3ImageEncoder
+from .image_encoder.jina_image_encoder import JinaImageEncoder
+from .image_encoder.openclip_image_encoder import OpenCLIPImageEncoder
+from .bgevl import BGEVLComponents, build_bgevl_components
 from .jina import JinaComponents, build_jina_components
 from .openclip import OpenCLIPComponents, build_openclip_components
 from .text_encoder.base import TextEncoderBase
-from .text_encoder.jina_encoder import JinaTextEncoder
-from .text_encoder.openclip_encoder import OpenCLIPTextEncoder
+from .text_encoder.bgevl_text_encoder import BGEVLTextEncoder
+from .text_encoder.jina_text_encoder import JinaTextEncoder
+from .text_encoder.openclip_text_encoder import OpenCLIPTextEncoder
 
 
 def _infer_image_encoder_type(args) -> str:
@@ -21,6 +24,8 @@ def _infer_image_encoder_type(args) -> str:
         family = family.lower()
         if family == "jinaai":
             return "jina"
+        if "bge-vl" in model.lower():
+            return "bge-vl"
         return family
     return "openclip"
 
@@ -39,6 +44,12 @@ def _get_jina_components(args, device) -> JinaComponents:
     return args._jina_components
 
 
+def _get_bgevl_components(args, device) -> BGEVLComponents:
+    if getattr(args, "_bgevl_components", None) is None:
+        args._bgevl_components = build_bgevl_components(args, device)
+    return args._bgevl_components
+
+
 def build_image_encoder(args, device) -> ImageEncoderBase:
     encoder_type = _infer_image_encoder_type(args)
     if encoder_type == "openclip":
@@ -54,6 +65,10 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
         components = _get_jina_components(args, device)
         return JinaImageEncoder(components)
 
+    if encoder_type == "bge-vl":
+        components = _get_bgevl_components(args, device)
+        return BGEVLImageEncoder(components)
+
     raise ValueError(f"Unsupported image encoder type: {encoder_type}")
 
 
@@ -66,6 +81,10 @@ def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
     if encoder_type == "jina":
         components = _get_jina_components(args, device)
         return JinaTextEncoder(components)
+
+    if encoder_type == "bge-vl":
+        components = _get_bgevl_components(args, device)
+        return BGEVLTextEncoder(components)
 
     if encoder_type == "none":
         logging.info("Text encoder disabled (type=none).")

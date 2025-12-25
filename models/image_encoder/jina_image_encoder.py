@@ -30,5 +30,4 @@ class JinaImageEncoder(ImageEncoderBase):
         if not torch.is_tensor(feats):
             raise TypeError(f"Unsupported image feature type from Jina encode_image: {type(feats)}")
         feats = F.normalize(feats, p=2, dim=-1)
-        import pdb; pdb.set_trace()
         return feats

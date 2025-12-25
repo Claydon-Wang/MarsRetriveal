@@ -17,23 +17,26 @@ PROMPT_TEMPLATES = [
 
 
 class QueryImageDataset(Dataset):
-    def __init__(self, image_paths: List[str], preprocess):
+    def __init__(self, image_paths: List[str], preprocess, return_path: bool = False):
         self.image_paths = image_paths
         self.preprocess = preprocess
+        self.return_path = return_path
 
     def __len__(self):
         return len(self.image_paths)
 
     def __getitem__(self, idx):
         path = self.image_paths[idx]
+        if self.return_path:
+            return path, path
         image = Image.open(path).convert("RGB")
         if self.preprocess:
             image = self.preprocess(image)
         return image, path
 
 
-def build_query_loader(image_paths: Iterable[str], preprocess, batch_size: int = 4, collate_fn=None):
-    dataset = QueryImageDataset(list(image_paths), preprocess)
+def build_query_loader(image_paths: Iterable[str], preprocess, batch_size: int = 4, collate_fn=None, return_path: bool = False):
+    dataset = QueryImageDataset(list(image_paths), preprocess, return_path=return_path)
     return DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
 
@@ -115,6 +118,7 @@ def build_query(
             image_encoder.get_processor(),
             batch_size=min(len(image_list), args.batch_size_database),
             collate_fn=getattr(image_encoder, "collate_fn", None),
+            return_path=getattr(image_encoder, "use_path_inputs", False),
         )
 
     if query_mode == "image":

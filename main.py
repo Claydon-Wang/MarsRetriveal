@@ -63,9 +63,14 @@ def main():
     logging.info("Using device: %s", device)
 
     image_encoder = build_image_encoder(args, device)
+    logging.info("Using image encoder: %s (type=%s)", image_encoder.__class__.__name__, args.image_encoder_type)
     text_encoder = None
     if args_dynamic.query_mode in ("text", "hybrid"):
         text_encoder = build_text_encoder(args, device)
+        if text_encoder is not None:
+            logging.info("Using text encoder: %s (type=%s)", text_encoder.__class__.__name__, args.text_encoder_type)
+        else:
+            logging.info("Text encoder disabled.")
 
     database = build_dataset(args, image_encoder, delta=0.2)
     retriever = build_retriever(args, database)

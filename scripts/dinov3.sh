@@ -11,7 +11,7 @@ CONFIG_NAME=MarsRetrieval
 EXP_NAME=main_exp
 
 # query settings
-QUERY_MODE=image   # image | text | hybrid (DINOv3 仅支持 image)
+QUERY_MODE=image   # image (DINOv3 仅支持 image)
 QUERY_TEXT=yardangs  # 用于 ground truth 选择，可用下划线代替空格
 QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/image_queries/${QUERY_TEXT}
 GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv

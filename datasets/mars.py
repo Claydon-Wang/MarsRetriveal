@@ -31,9 +31,10 @@ def _extract_coordinates(image_name: str) -> Tuple[float, float]:
 
 
 class MarsBenchmarkDataset(Dataset):
-    def __init__(self, thumb_dir: str, transform=None):
+    def __init__(self, thumb_dir: str, transform=None, return_path: bool = False):
         self.thumb_dir = thumb_dir
         self.transform = transform
+        self.return_path = return_path
         self.samples_pkl_path = os.path.join(os.path.dirname(thumb_dir), "samples.pkl")
         self.samples = self._load_or_scan_samples()
 
@@ -65,6 +66,8 @@ class MarsBenchmarkDataset(Dataset):
     def __getitem__(self, index):
         image_name = self.samples[index]
         path = os.path.join(self.thumb_dir, image_name)
+        if self.return_path:
+            return path, image_name
         image = Image.open(path)
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -112,7 +115,11 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 args.feature_dim = features.shape[1]
         else:
             logging.info("Preparing database features from thumbnails in %s", thumb_dir)
-            target_dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
+            target_dataset = MarsBenchmarkDataset(
+                thumb_dir,
+                transform=image_encoder.get_processor(),
+                return_path=getattr(image_encoder, "use_path_inputs", False),
+            )
             target_loader = DataLoader(
                 target_dataset,
                 batch_size=args.batch_size_database,
@@ -170,7 +177,11 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
     def _build_shard(
         self, args, image_encoder, thumb_dir: str, indices: List[int], shard_dir: str, rank: int
     ):
-        target_dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
+        target_dataset = MarsBenchmarkDataset(
+            thumb_dir,
+            transform=image_encoder.get_processor(),
+            return_path=getattr(image_encoder, "use_path_inputs", False),
+        )
         subset = Subset(target_dataset, indices)
         target_loader = DataLoader(
             subset,
