@@ -36,13 +36,15 @@ def _parse_model_spec(model: str, default_family: str = "openclip"):
     return default_family, model
 
 def _merge_args(args, args_dynamic):
-    args.project_name = args_dynamic.project_name or args.project_name
-    args.name = args_dynamic.exp_name or f"{args_dynamic.query_mode}_retrieval"
-    args.query_mode = args_dynamic.query_mode
-    explicit_image_type = args_dynamic.image_encoder_type
+    args.project_name = getattr(args_dynamic, "project_name", None) or getattr(args, "project_name", None)
+    query_mode_in = getattr(args_dynamic, "query_mode", None) or getattr(args, "query_mode", "image")
+    args.name = getattr(args_dynamic, "exp_name", None) or f"{query_mode_in}_retrieval"
+    args.query_mode = query_mode_in
+
+    explicit_image_type = getattr(args_dynamic, "image_encoder_type", None)
     args.image_encoder_type = explicit_image_type or getattr(args, "image_encoder_type", "openclip")
-    args.text_encoder_type = args_dynamic.text_encoder_type or getattr(args, "text_encoder_type", None)
-    model_spec = args_dynamic.model_name or args.model
+    args.text_encoder_type = getattr(args_dynamic, "text_encoder_type", None) or getattr(args, "text_encoder_type", None)
+    model_spec = getattr(args_dynamic, "model_name", None) or args.model
     # Non-openclip encoders: keep full model_spec (e.g., HF IDs with '/')
     if args.image_encoder_type != "openclip":
         model_family, model_name = args.image_encoder_type, model_spec
@@ -58,13 +60,13 @@ def _merge_args(args, args_dynamic):
     # Default text encoder type follows the (possibly inferred) image encoder type if not explicitly set
     if args.text_encoder_type is None:
         args.text_encoder_type = "openclip" if args.image_encoder_type == "openclip" else "none"
-    if args_dynamic.pretrained:
+    if getattr(args_dynamic, "pretrained", None):
         args.pretrained = args_dynamic.pretrained
-    if args_dynamic.resume_post_train:
+    if getattr(args_dynamic, "resume_post_train", None):
         args.resume_post_train = args_dynamic.resume_post_train
-    if args_dynamic.top_k:
+    if getattr(args_dynamic, "top_k", None):
         args.top_k = args_dynamic.top_k
-    if args_dynamic.db_dir:
+    if getattr(args_dynamic, "db_dir", None):
         args.db_dir = args_dynamic.db_dir
     if not getattr(args, "db_dir", None):
         delta_val = getattr(args, "delta_degree", 0.2)
@@ -82,7 +84,7 @@ def _merge_args(args, args_dynamic):
         args.db_dir = f"{base_dir}/image_size_{args.force_image_size}_delta_{delta_val}/{tag}"
     args.delta_degree = getattr(args, "delta_degree", 0.2)
     # Output dir: structured by model/pretrain/resume/query
-    if args_dynamic.output_dir:
+    if getattr(args_dynamic, "output_dir", None):
         args.output_dir = args_dynamic.output_dir
     else:
         exp_prefix = _slugify(args.name)
@@ -96,9 +98,9 @@ def _merge_args(args, args_dynamic):
         else:
             resume_tag = "no_resume"
 
-        query_mode_tag = _slugify(args_dynamic.query_mode)
-        query_images = args_dynamic.query_images or []
-        query_text = args_dynamic.query_text or ""
+        query_mode_tag = _slugify(args.query_mode)
+        query_images = getattr(args_dynamic, "query_images", None) or []
+        query_text = getattr(args_dynamic, "query_text", None) or ""
         if query_text:
             query_tag = _slugify(query_text)[:80]
         elif query_images:
@@ -109,11 +111,11 @@ def _merge_args(args, args_dynamic):
         args.output_dir = os.path.join(
             args.logs, exp_prefix, model_tag, pretrained_tag, resume_tag, query_mode_tag, query_tag
         )
-    if args_dynamic.radius_deg is not None:
+    if getattr(args_dynamic, "radius_deg", None) is not None:
         args.radius_deg = args_dynamic.radius_deg
-    if args_dynamic.eval_max_k is not None:
+    if getattr(args_dynamic, "eval_max_k", None) is not None:
         args.eval_max_k = args_dynamic.eval_max_k
-    if args_dynamic.ground_truth_csv is not None:
+    if getattr(args_dynamic, "ground_truth_csv", None) is not None:
         args.ground_truth_csv = args_dynamic.ground_truth_csv
     return args
 
