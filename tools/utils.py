@@ -70,7 +70,7 @@ def _merge_args(args, args_dynamic):
         args.db_dir = args_dynamic.db_dir
     if not getattr(args, "db_dir", None):
         delta_val = getattr(args, "delta_degree", 0.2)
-        if args.resume_post_train:
+        if getattr(args_dynamic, "resume_post_train", None):
             parts = args.resume_post_train.strip("/").split("/")[-3:]
             if parts[-1].endswith(".pt"):
                 parts[-1] = parts[-1].rsplit(".", 1)[0]
@@ -81,7 +81,7 @@ def _merge_args(args, args_dynamic):
         model_tag = str(args.model).replace("/", "_")
         tag = "_".join([model_tag, str(suffix)])
         base_dir = getattr(args, "database_root", None) or getattr(args, "project_dir", ".")
-        args.db_dir = f"{base_dir}/image_size_{args.force_image_size}_delta_{delta_val}/{tag}"
+        args.db_dir = f"{base_dir}/delta_{delta_val}/{tag}"
     args.delta_degree = getattr(args, "delta_degree", 0.2)
     # Output dir: structured by model/pretrain/resume/query
     if getattr(args_dynamic, "output_dir", None):

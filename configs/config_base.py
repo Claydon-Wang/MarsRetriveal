@@ -24,11 +24,6 @@ class Config:
     force_image_size = None
     image_mean = None
     image_std = None
-    image_interpolation = None
-    image_resize_mode = None
-    aug_cfg = None
-    pretrained_image = False
-    cache_dir = None
     siglip = False
     dinov3_pooling = "cls"  # cls | mean
 
@@ -41,7 +36,7 @@ class Config:
     top_k = 20000
     eval_max_k = 20000
     radius_deg = 0.5
-    feature_dim = 768
+    feature_dim = None
     mix_image_ratio = 0.3
 
     def __post_init__(self):

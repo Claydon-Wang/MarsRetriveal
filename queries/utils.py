@@ -75,7 +75,9 @@ def build_image_query(args, image_encoder, reference_loader, text_features: Opti
     query_tensor = F.normalize(query_tensor, p=2, dim=-1)
     query = query_tensor.cpu().numpy()
 
-    if query.shape[1] != args.feature_dim:
+    if getattr(args, "feature_dim", None) is None:
+        args.feature_dim = query.shape[1]
+    elif query.shape[1] != args.feature_dim:
         raise ValueError(f"Image query dim mismatch: {query.shape[1]} != {args.feature_dim}")
     return query
 

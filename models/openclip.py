@@ -36,19 +36,11 @@ def build_openclip_components(args, device) -> OpenCLIPComponents:
         args.pretrained,
         precision=args.precision,
         device=device,
-        jit=args.torchscript,
         force_quick_gelu=args.force_quick_gelu,
-        force_custom_text=args.force_custom_text,
-        force_patch_dropout=args.force_patch_dropout,
         force_image_size=args.force_image_size,
         image_mean=args.image_mean,
         image_std=args.image_std,
-        image_interpolation=args.image_interpolation,
-        image_resize_mode=args.image_resize_mode,
-        aug_cfg=args.aug_cfg,
-        pretrained_image=args.pretrained_image,
         output_dict=True,
-        cache_dir=args.cache_dir,
         **model_kwargs,
     )
 
@@ -64,7 +56,7 @@ def build_openclip_components(args, device) -> OpenCLIPComponents:
         if incompatible_keys and (incompatible_keys.missing_keys or incompatible_keys.unexpected_keys):
             logging.warning("Incompatible keys while loading checkpoint: %s", incompatible_keys)
 
-    tokenizer = get_tokenizer(args.model, cache_dir=args.cache_dir)
+    tokenizer = get_tokenizer(args.model)
     return OpenCLIPComponents(
         model=model,
         preprocess_train=preprocess_train,

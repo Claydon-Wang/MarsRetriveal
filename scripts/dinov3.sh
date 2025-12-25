@@ -26,7 +26,7 @@ PRETRAINED=hf  # 仅用于日志/命名
 NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
 if [[ "${NPROC}" -gt 1 ]]; then
   echo "Building DB with torchrun on ${NPROC} GPUs: ${CUDA_VISIBLE_DEVICES}"
-  torchrun --nproc_per_node=${NPROC} main_db_build.py \
+  torchrun --nproc_per_node=${NPROC} build_db.py \
     --config_name "${CONFIG_NAME}" \
     --exp_name "${EXP_NAME}" \
     --image_encoder_type "${IMAGE_ENCODER_TYPE}" \

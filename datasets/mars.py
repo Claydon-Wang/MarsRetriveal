@@ -80,7 +80,7 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
         elif getattr(args, "resume_post_train", None):
             tag = args.resume_post_train.strip("/").split("/")[-3]
             base_dir = getattr(args, "database_root", None) or getattr(args, "project_dir", ".")
-            db_dir = f"{base_dir}/image_size_{args.force_image_size}_delta_{delta}/{tag}"
+            db_dir = f"{base_dir}/delta_{delta}/{tag}"
         else:
             raise ValueError("db_dir or resume_post_train must be provided to locate the database.")
 
@@ -108,6 +108,8 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 metadata = pickle.load(f)
             with open(coordinates_save_path, "rb") as f:
                 coordinates = pickle.load(f)
+            if getattr(args, "feature_dim", None) is None:
+                args.feature_dim = features.shape[1]
         else:
             logging.info("Preparing database features from thumbnails in %s", thumb_dir)
             target_dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
@@ -134,6 +136,9 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 coordinates.extend(batch_coordinates)
 
             features = np.concatenate(features, axis=0).astype("float32")
+
+            if getattr(args, "feature_dim", None) is None:
+                args.feature_dim = features.shape[1]
 
             np.save(feature_save_path, features)
             with open(metadata_save_path, "wb") as f:
@@ -188,7 +193,13 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             batch_coordinates = [_extract_coordinates(name) for name in image_names]
             coordinates.extend(batch_coordinates)
 
-        features = np.concatenate(features, axis=0).astype("float32") if features else np.empty((0, args.feature_dim), dtype="float32")
+        if features:
+            features = np.concatenate(features, axis=0).astype("float32")
+            if getattr(args, "feature_dim", None) is None:
+                args.feature_dim = features.shape[1]
+        else:
+            dim = getattr(args, "feature_dim", None) or 0
+            features = np.empty((0, dim), dtype="float32")
 
         shard_paths = {
             "features": os.path.join(shard_dir, f"features_rank{rank}.npy"),
@@ -230,6 +241,8 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                     metadata = pickle.load(f)
                 with open(coordinates_save_path, "rb") as f:
                     coordinates = pickle.load(f)
+                if getattr(args, "feature_dim", None) is None:
+                    args.feature_dim = features.shape[1]
                 index = faiss.IndexFlatIP(args.feature_dim)
                 # 分块 add，避免一次性复制
                 bs = 200000
@@ -258,15 +271,21 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             coord_paths = [os.path.join(shard_dir, f"coordinates_rank{r}.pkl") for r in range(world_size)]
 
             shard_ns = []
+            shard_dim = getattr(args, "feature_dim", None)
             for p in feature_paths:
                 if os.path.exists(p):
                     arr = np.load(p, mmap_mode="r")
                     shard_ns.append(arr.shape[0])
+                    if shard_dim is None and arr.shape[0] > 0:
+                        shard_dim = arr.shape[1]
                 else:
                     shard_ns.append(0)
 
             total_rows = sum(shard_ns)
-            D = args.feature_dim
+            if shard_dim is None:
+                shard_dim = args.feature_dim
+            args.feature_dim = shard_dim
+            D = shard_dim
 
             final = open_memmap(feature_save_path, mode="w+", dtype="float32", shape=(total_rows, D))
             off = 0
