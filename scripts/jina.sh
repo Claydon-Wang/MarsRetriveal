@@ -17,9 +17,9 @@ QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/i
 GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv
 
 # model / encoder settings (DINOv3)
-IMAGE_ENCODER_TYPE=dinov3
-TEXT_ENCODER_TYPE=none
-MODEL_NAME=facebook/dinov3-vitl16-pretrain-lvd1689m  # HF 模型 ID
+IMAGE_ENCODER_TYPE=jina
+TEXT_ENCODER_TYPE=jina
+MODEL_NAME=jinaai/jina-embeddings-v4  # HF 模型 ID
 PRETRAINED=hf  # 仅用于日志/命名
 
 # optional distributed DB build (skips if DB already exists)

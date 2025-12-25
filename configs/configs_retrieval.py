@@ -15,24 +15,22 @@ class MarsRetrieval(Config):
         self.global_img_dir = f"{self.project_dir}/dataset/mars_global.jpg" # Global mosaic image for plotting
 
 @dataclass
-class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
-    model = "ViT-B-16-quickgelu"
-    pretrained = "openai"
-
-@dataclass
 class MarsRetrievalCLIP_MarScope(MarsRetrieval):
     model = "ViT-L-14-quickgelu" # ViT-L-14-quickgelu
     pretrained = "dfn2b"
     force_image_size = 512
     force_quick_gelu = True
 
-@dataclass
-class MarsRetrievalDinoV3(MarsRetrieval):
-    model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
 
 # @dataclass
-# class MarsRetrievalSIGLIP(MarsRetrieval):
-#     model = "ViT-L-16-SigLIP2-512"
-#     pretrained = "webli"
+# class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
+#     model = "ViT-B-16-quickgelu"
+#     pretrained = "openai"
+
+
+# @dataclass
+# class MarsRetrievalDinoV3(MarsRetrieval):
+#     model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
+
 
 

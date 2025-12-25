@@ -120,6 +120,7 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 num_workers=args.workers,
                 pin_memory=True,
                 drop_last=False,
+                collate_fn=getattr(image_encoder, "collate_fn", None),
             )
 
             features = []
@@ -178,6 +179,7 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             num_workers=args.workers,
             pin_memory=True,
             drop_last=False,
+            collate_fn=getattr(image_encoder, "collate_fn", None),
         )
 
         features = []

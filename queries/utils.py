@@ -32,9 +32,9 @@ class QueryImageDataset(Dataset):
         return image, path
 
 
-def build_query_loader(image_paths: Iterable[str], preprocess, batch_size: int = 4):
+def build_query_loader(image_paths: Iterable[str], preprocess, batch_size: int = 4, collate_fn=None):
     dataset = QueryImageDataset(list(image_paths), preprocess)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
 
 def build_text_query(args, text_encoder, query_name: str, return_tensor: bool = False):
@@ -111,7 +111,10 @@ def build_query(
         if not image_list:
             raise ValueError("No images found for the provided query_images paths.")
         reference_loader = build_query_loader(
-            image_list, image_encoder.get_processor(), batch_size=min(len(image_list), args.batch_size_database)
+            image_list,
+            image_encoder.get_processor(),
+            batch_size=min(len(image_list), args.batch_size_database),
+            collate_fn=getattr(image_encoder, "collate_fn", None),
         )
 
     if query_mode == "image":

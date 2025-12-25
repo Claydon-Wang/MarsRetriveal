@@ -32,7 +32,7 @@ class Config:
     database_root = None
     delta_degree = 0.2
     workers = 8
-    batch_size_database = 512
+    batch_size_database = 256
     top_k = 20000
     eval_max_k = 20000
     radius_deg = 0.5

@@ -59,7 +59,10 @@ def _merge_args(args, args_dynamic):
         args.image_encoder_type = model_family
     # Default text encoder type follows the (possibly inferred) image encoder type if not explicitly set
     if args.text_encoder_type is None:
-        args.text_encoder_type = "openclip" if args.image_encoder_type == "openclip" else "none"
+        if args.image_encoder_type in ("openclip", "jina"):
+            args.text_encoder_type = args.image_encoder_type
+        else:
+            args.text_encoder_type = "none"
     if getattr(args_dynamic, "pretrained", None):
         args.pretrained = args_dynamic.pretrained
     if getattr(args_dynamic, "resume_post_train", None):
