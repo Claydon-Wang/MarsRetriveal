@@ -10,7 +10,7 @@ CONFIG_NAME=MarsRetrieval
 EXP_NAME=main_exp
 
 # Query settings
-QUERY_MODE=image   # image | text | hybrid
+QUERY_MODE=text   # image | text | hybrid
 QUERY_TEXT=yardangs
 QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/image_queries/yardangs
 GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/yardangs.csv
