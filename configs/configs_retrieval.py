@@ -22,6 +22,15 @@ class MarsRetrievalCLIP_MarScope(MarsRetrieval):
     force_quick_gelu = True
 
 
+@dataclass
+class MarsRetrievalE5V(MarsRetrieval):
+    image_encoder_type = "e5-v"
+    text_encoder_type = "e5-v"
+    model = "royokong/e5-v"
+    batch_size_database = 1
+    patch_size = 14
+
+
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
 #     model = "ViT-B-16-quickgelu"
@@ -31,6 +40,5 @@ class MarsRetrievalCLIP_MarScope(MarsRetrieval):
 # @dataclass
 # class MarsRetrievalDinoV3(MarsRetrieval):
 #     model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
-
 
 
