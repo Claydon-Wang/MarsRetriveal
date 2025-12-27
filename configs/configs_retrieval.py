@@ -31,6 +31,15 @@ class MarsRetrievalE5V(MarsRetrieval):
     patch_size = 14
 
 
+@dataclass
+class MarsRetrievalVLM2Vec(MarsRetrieval):
+    image_encoder_type = "vlm2vec"
+    text_encoder_type = "vlm2vec"
+    model = "VLM2Vec/VLM2Vec-V2.0"
+    batch_size_database = 4
+
+
+
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
 #     model = "ViT-B-16-quickgelu"
@@ -40,5 +49,3 @@ class MarsRetrievalE5V(MarsRetrieval):
 # @dataclass
 # class MarsRetrievalDinoV3(MarsRetrieval):
 #     model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
-
-

@@ -48,6 +48,8 @@ def _merge_args(args, args_dynamic):
     if explicit_image_type is None:
         if "e5-v" in str(model_spec).lower():
             args.image_encoder_type = "e5-v"
+        if "vlm2vec" in str(model_spec).lower():
+            args.image_encoder_type = "vlm2vec"
     # Non-openclip encoders: keep full model_spec (e.g., HF IDs with '/')
     if args.image_encoder_type != "openclip":
         model_family, model_name = args.image_encoder_type, model_spec
@@ -62,7 +64,7 @@ def _merge_args(args, args_dynamic):
         args.image_encoder_type = model_family
     # Default text encoder type follows the (possibly inferred) image encoder type if not explicitly set
     if args.text_encoder_type is None:
-        if args.image_encoder_type in ("openclip", "jina", "bge-vl", "e5-v"):
+        if args.image_encoder_type in ("openclip", "jina", "bge-vl", "e5-v", "vlm2vec"):
             args.text_encoder_type = args.image_encoder_type
         else:
             args.text_encoder_type = "none"
