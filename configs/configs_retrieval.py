@@ -65,6 +65,14 @@ class MarsRetrievalB3Qwen2(MarsRetrieval):
     batch_size_database = 4
 
 
+@dataclass
+class MarsRetrievalOpsMM(MarsRetrieval):
+    image_encoder_type = "opsmm_v1"
+    text_encoder_type = "opsmm_v1"
+    model = "OpenSearch-AI/Ops-MM-embedding-v1-2B"
+    batch_size_database = 8
+
+
 
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):

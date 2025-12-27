@@ -9,12 +9,14 @@ from .image_encoder.e5v_image_encoder import E5VImageEncoder
 from .image_encoder.vlm2vec_image_encoder import VLM2VecImageEncoder
 from .image_encoder.aimv2_vl_image_encoder import AimV2VLImageEncoder
 from .image_encoder.aimv2_vis_image_encoder import AimV2VisImageEncoder
+from .image_encoder.opsmm_v1_image_encoder import OpsMMV1ImageEncoder
 from .image_encoder.openclip_image_encoder import OpenCLIPImageEncoder
 from .bgevl import BGEVLComponents, build_bgevl_components
 from .e5v import E5VComponents, build_e5v_components
 from .vlm2vec import VLM2VecComponents, build_vlm2vec_components
 from .aimv2_vl import AimV2VLComponents, build_aimv2_vl_components
 from .aimv2_vis import AimV2VisComponents, build_aimv2_vis_components
+from .opsmm_v1 import OpsMMV1Components, build_opsmm_v1_components
 from .jina import JinaComponents, build_jina_components
 from .openclip import OpenCLIPComponents, build_openclip_components
 from .text_encoder.base import TextEncoderBase
@@ -22,6 +24,7 @@ from .text_encoder.bgevl_text_encoder import BGEVLTextEncoder
 from .text_encoder.e5v_text_encoder import E5VTextEncoder
 from .text_encoder.vlm2vec_text_encoder import VLM2VecTextEncoder
 from .text_encoder.aimv2_vl_text_encoder import AimV2VLTextEncoder
+from .text_encoder.opsmm_v1_text_encoder import OpsMMV1TextEncoder
 from .text_encoder.jina_text_encoder import JinaTextEncoder
 from .text_encoder.openclip_text_encoder import OpenCLIPTextEncoder
 
@@ -43,6 +46,8 @@ def _infer_image_encoder_type(args) -> str:
             return "vlm2vec"
         if "b3" in model.lower():
             return "vlm2vec"
+        if "ops-mm" in model.lower() or "ops_mm" in model.lower() or "opensearch-ai" in model.lower():
+            return "opsmm_v1"
         if "aimv" in model.lower() or family == "apple":
             if "patch14-448" in model.lower():
                 return "aimv2_vis"
@@ -95,6 +100,12 @@ def _get_aimv2_vis_components(args, device) -> AimV2VisComponents:
     return args._aimv2_vis_components
 
 
+def _get_opsmm_v1_components(args, device) -> OpsMMV1Components:
+    if getattr(args, "_opsmm_v1_components", None) is None:
+        args._opsmm_v1_components = build_opsmm_v1_components(args, device)
+    return args._opsmm_v1_components
+
+
 def build_image_encoder(args, device) -> ImageEncoderBase:
     encoder_type = _infer_image_encoder_type(args)
     if encoder_type == "openclip":
@@ -130,6 +141,10 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
         components = _get_aimv2_vis_components(args, device)
         return AimV2VisImageEncoder(components)
 
+    if encoder_type == "opsmm_v1":
+        components = _get_opsmm_v1_components(args, device)
+        return OpsMMV1ImageEncoder(components)
+
     raise ValueError(f"Unsupported image encoder type: {encoder_type}")
 
 
@@ -158,6 +173,10 @@ def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
     if encoder_type == "aimv2_vl":
         components = _get_aimv2_vl_components(args, device)
         return AimV2VLTextEncoder(components)
+
+    if encoder_type == "opsmm_v1":
+        components = _get_opsmm_v1_components(args, device)
+        return OpsMMV1TextEncoder(components)
 
     if encoder_type == "aimv2_vis":
         raise ValueError("Text encoder is not available for aimv2-vis (vision-only) models.")

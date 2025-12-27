@@ -21,7 +21,8 @@ pip install flash_attn-2.8.3+cu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.w
 ```bash
 # Create a conda environment
 mkdir third_party
-git clone https://github.com/TIGER-AI-Lab/VLM2Vec.git vlm2vec
-# 
+cd third_party
+git clone https://github.com/TIGER-AI-Lab/VLM2Vec.git vlm2vec # for vlm2vec and b3_qwen
 
+git clone https://huggingface.co/OpenSearch-AI/Ops-MM-embedding-v1-2B ops_mm_embedding # for ops_mm
 ```
