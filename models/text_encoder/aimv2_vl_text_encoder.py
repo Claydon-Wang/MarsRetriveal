@@ -31,4 +31,4 @@ class AimV2VLTextEncoder(TextEncoderBase):
             txt_vec = txt_out.last_hidden_state
             feats = model.text_projector(txt_vec)
             feats = F.normalize(feats, p=2, dim=-1)
-        return feats.to("cpu")
+        return feats

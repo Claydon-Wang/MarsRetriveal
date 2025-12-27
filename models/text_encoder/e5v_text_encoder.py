@@ -28,4 +28,4 @@ class E5VTextEncoder(TextEncoderBase):
             )
             feats = outputs.hidden_states[-1][:, -1, :]
             feats = F.normalize(feats, p=2, dim=-1)
-        return feats.to("cpu")
+        return feats

@@ -18,4 +18,4 @@ class OpsMMV1TextEncoder(TextEncoderBase):
             feats = self.components.model.get_text_embeddings(list(prompts))
         if not torch.is_tensor(feats):
             feats = torch.tensor(feats)
-        return feats.to(torch.float32).to("cpu")
+        return feats.to(dtype=torch.float32, device=self.device)

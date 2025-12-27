@@ -45,4 +45,4 @@ class VLM2VecTextEncoder(TextEncoderBase):
 
         if not self.components.model.normalize:
             feats = F.normalize(feats, p=2, dim=-1)
-        return feats.to("cpu")
+        return feats

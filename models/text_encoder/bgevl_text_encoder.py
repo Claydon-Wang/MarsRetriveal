@@ -17,4 +17,4 @@ class BGEVLTextEncoder(TextEncoderBase):
         if not torch.is_tensor(feats):
             raise TypeError(f"Unsupported text feature type from BGE-VL encode_text: {type(feats)}")
         feats = F.normalize(feats, p=2, dim=-1)
-        return feats.to("cpu")
+        return feats
