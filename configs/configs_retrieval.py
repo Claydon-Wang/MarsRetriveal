@@ -57,6 +57,14 @@ class MarsRetrievalAimV2Vis(MarsRetrieval):
     batch_size_database = 64
 
 
+@dataclass
+class MarsRetrievalB3Qwen2(MarsRetrieval):
+    image_encoder_type = "vlm2vec"
+    text_encoder_type = "vlm2vec"
+    model = "raghavlite/B3_Qwen2_2B"
+    batch_size_database = 4
+
+
 
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):

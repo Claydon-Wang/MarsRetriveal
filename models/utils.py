@@ -41,6 +41,8 @@ def _infer_image_encoder_type(args) -> str:
             return "e5-v"
         if "vlm2vec" in model.lower():
             return "vlm2vec"
+        if "b3" in model.lower():
+            return "vlm2vec"
         if "aimv" in model.lower() or family == "apple":
             if "patch14-448" in model.lower():
                 return "aimv2_vis"
