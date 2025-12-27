@@ -10,3 +10,9 @@ scipy>=1.10.0
 scikit-learn>=1.2.0
 transformers
 peft>=0.15.2
+sentencepiece>=0.1.99
+accelerate>=0.28.0
+einops>=0.7.0
+timm>=0.9.12
+qwen-vl-utils[decord]==0.0.8
+scikit-image>=0.22.0

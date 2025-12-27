@@ -7,16 +7,21 @@ from .image_encoder.dinov3_image_encoder import DinoV3ImageEncoder
 from .image_encoder.jina_image_encoder import JinaImageEncoder
 from .image_encoder.e5v_image_encoder import E5VImageEncoder
 from .image_encoder.vlm2vec_image_encoder import VLM2VecImageEncoder
+from .image_encoder.aimv2_vl_image_encoder import AimV2VLImageEncoder
+from .image_encoder.aimv2_vis_image_encoder import AimV2VisImageEncoder
 from .image_encoder.openclip_image_encoder import OpenCLIPImageEncoder
 from .bgevl import BGEVLComponents, build_bgevl_components
 from .e5v import E5VComponents, build_e5v_components
 from .vlm2vec import VLM2VecComponents, build_vlm2vec_components
+from .aimv2_vl import AimV2VLComponents, build_aimv2_vl_components
+from .aimv2_vis import AimV2VisComponents, build_aimv2_vis_components
 from .jina import JinaComponents, build_jina_components
 from .openclip import OpenCLIPComponents, build_openclip_components
 from .text_encoder.base import TextEncoderBase
 from .text_encoder.bgevl_text_encoder import BGEVLTextEncoder
 from .text_encoder.e5v_text_encoder import E5VTextEncoder
 from .text_encoder.vlm2vec_text_encoder import VLM2VecTextEncoder
+from .text_encoder.aimv2_vl_text_encoder import AimV2VLTextEncoder
 from .text_encoder.jina_text_encoder import JinaTextEncoder
 from .text_encoder.openclip_text_encoder import OpenCLIPTextEncoder
 
@@ -36,6 +41,10 @@ def _infer_image_encoder_type(args) -> str:
             return "e5-v"
         if "vlm2vec" in model.lower():
             return "vlm2vec"
+        if "aimv" in model.lower() or family == "apple":
+            if "patch14-448" in model.lower():
+                return "aimv2_vis"
+            return "aimv2_vl"
         return family
     return "openclip"
 
@@ -72,6 +81,18 @@ def _get_vlm2vec_components(args, device) -> VLM2VecComponents:
     return args._vlm2vec_components
 
 
+def _get_aimv2_vl_components(args, device) -> AimV2VLComponents:
+    if getattr(args, "_aimv2_vl_components", None) is None:
+        args._aimv2_vl_components = build_aimv2_vl_components(args, device)
+    return args._aimv2_vl_components
+
+
+def _get_aimv2_vis_components(args, device) -> AimV2VisComponents:
+    if getattr(args, "_aimv2_vis_components", None) is None:
+        args._aimv2_vis_components = build_aimv2_vis_components(args, device)
+    return args._aimv2_vis_components
+
+
 def build_image_encoder(args, device) -> ImageEncoderBase:
     encoder_type = _infer_image_encoder_type(args)
     if encoder_type == "openclip":
@@ -99,6 +120,14 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
         components = _get_vlm2vec_components(args, device)
         return VLM2VecImageEncoder(components)
 
+    if encoder_type == "aimv2_vl":
+        components = _get_aimv2_vl_components(args, device)
+        return AimV2VLImageEncoder(components)
+
+    if encoder_type == "aimv2_vis":
+        components = _get_aimv2_vis_components(args, device)
+        return AimV2VisImageEncoder(components)
+
     raise ValueError(f"Unsupported image encoder type: {encoder_type}")
 
 
@@ -123,6 +152,13 @@ def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
     if encoder_type == "vlm2vec":
         components = _get_vlm2vec_components(args, device)
         return VLM2VecTextEncoder(components)
+
+    if encoder_type == "aimv2_vl":
+        components = _get_aimv2_vl_components(args, device)
+        return AimV2VLTextEncoder(components)
+
+    if encoder_type == "aimv2_vis":
+        raise ValueError("Text encoder is not available for aimv2-vis (vision-only) models.")
 
     if encoder_type == "none":
         logging.info("Text encoder disabled (type=none).")

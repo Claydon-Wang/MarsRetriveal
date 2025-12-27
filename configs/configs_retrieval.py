@@ -39,6 +39,24 @@ class MarsRetrievalVLM2Vec(MarsRetrieval):
     batch_size_database = 4
 
 
+@dataclass
+class MarsRetrievalAimV2VL(MarsRetrieval):
+    image_encoder_type = "aimv2_vl"
+    text_encoder_type = "aimv2_vl"
+    model = "apple/aimv2-large-patch14-224-lit"
+    pretrained = "c2cd59a786c4c06f39d199c50d08cc2eab9f8605"
+    batch_size_database = 96
+
+
+@dataclass
+class MarsRetrievalAimV2Vis(MarsRetrieval):
+    image_encoder_type = "aimv2_vis"
+    text_encoder_type = "none"
+    model = "apple/aimv2-large-patch14-448"
+    pretrained = "cefb13f21003bdadba65bfbee956c82b976cd23d"
+    batch_size_database = 64
+
+
 
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
