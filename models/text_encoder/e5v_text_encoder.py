@@ -15,7 +15,8 @@ class E5VTextEncoder(TextEncoderBase):
     def encode_text(self, prompts):
         prompts = self.components.build_text_prompts(prompts)
         inputs = self.components.processor(
-            prompts,
+            text=prompts,
+            images=None,
             return_tensors="pt",
             padding=True,
         ).to(self.device)
