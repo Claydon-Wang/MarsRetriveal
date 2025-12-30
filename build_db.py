@@ -7,7 +7,7 @@ import torch
 import torch.distributed as dist
 
 from configs.config_base import load_static_config
-from tools.utils import _merge_args, _configure_logging, random_seed
+from tools.utils import _merge_args, _configure_logging, random_seed, _silence_noisy_loggers
 from datasets.utils import build_dataset_distributed
 from models.utils import build_image_encoder
 
@@ -49,6 +49,8 @@ def main():
     args_dyn = _parse_args()
     args = load_static_config(args_dyn.config_name, type="retrieval")
     args = _merge_args(args, args_dyn)
+
+    _silence_noisy_loggers()
 
     rank, world_size, local_rank = init_distributed()
     device = torch.device("cuda", local_rank) if torch.cuda.is_available() else torch.device("cpu")

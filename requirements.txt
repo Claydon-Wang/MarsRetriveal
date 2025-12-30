@@ -16,3 +16,5 @@ einops>=0.7.0
 timm>=0.9.12
 qwen-vl-utils[decord]==0.0.8
 scikit-image
+opencv-contrib-python
+opencv-python

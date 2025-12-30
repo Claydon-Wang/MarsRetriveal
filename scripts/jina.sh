@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Usage: bash scripts/dinov3.sh 0,1,2,3  (or export CUDA_VISIBLE_DEVICES beforehand)
+export TORCH_DISTRIBUTED_TIMEOUT=86400
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 

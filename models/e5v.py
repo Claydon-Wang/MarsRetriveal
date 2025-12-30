@@ -24,7 +24,8 @@ class E5VComponents:
 def build_e5v_components(args, device) -> E5VComponents:
     model_id = getattr(args, "model", None) or "royokong/e5-v"
     dtype = torch.float16 if device.type == "cuda" else torch.float32
-
+    # logging.getLogger("PIL").setLevel(logging.WARNING)
+    # logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
     logging.info("Loading e5-V model: %s", model_id)
     processor = LlavaNextProcessor.from_pretrained(model_id)
     processor.patch_size = args.patch_size if hasattr(args, "patch_size") and args.patch_size is not None else 14

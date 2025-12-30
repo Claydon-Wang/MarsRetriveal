@@ -18,10 +18,6 @@ def build_aimv2_vl_components(args, device) -> AimV2VLComponents:
     revision = getattr(args, "pretrained", None) or getattr(args, "revision", None) or "c2cd59a786c4c06f39d199c50d08cc2eab9f8605"
     dtype = torch.float16 if device.type == "cuda" else torch.float32
 
-    # Silence noisy PIL debug logging during dataset builds.
-    logging.getLogger("PIL").setLevel(logging.WARNING)
-    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
-
     logging.info("Loading AIMv2 model: %s (rev=%s)", model_id, revision)
     processor = AutoProcessor.from_pretrained(model_id, revision=revision, trust_remote_code=True)
     model = AutoModel.from_pretrained(

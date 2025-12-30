@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List
 import torch
 from configs.config_base import load_static_config
-from tools.utils import random_seed, _merge_args, _configure_logging, _validate_inputs
+from tools.utils import random_seed, _merge_args, _configure_logging, _validate_inputs, _silence_noisy_loggers
 
 from datasets.utils import build_dataset
 from evaluators.utils import build_evaluator
@@ -47,6 +47,7 @@ def _parse_args():
 
 
 def main():
+    _silence_noisy_loggers()
     args_dynamic = _parse_args()
     args = load_static_config(args_dynamic.config_name, type="retrieval")
     args = _merge_args(args, args_dynamic)

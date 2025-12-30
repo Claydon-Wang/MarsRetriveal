@@ -131,6 +131,23 @@ def _merge_args(args, args_dynamic):
 
 
 
+def _silence_noisy_loggers():
+    """Force noisy third-party loggers down to ERROR."""
+    noisy = (
+        "urllib3",
+        "urllib3.connectionpool",
+        "huggingface_hub",
+        "transformers",
+        "transformers.utils.hub",
+        "httpx",
+        "requests",
+        "PIL",
+        "PIL.PngImagePlugin",
+    )
+    for name in noisy:
+        logging.getLogger(name).setLevel(logging.ERROR)
+
+
 def _configure_logging(output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
     log_file = os.path.join(output_dir, "retrieval.log")
@@ -140,6 +157,7 @@ def _configure_logging(output_dir: str):
         handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler(log_file, mode="a")],
         force=True,
     )
+    _silence_noisy_loggers()
     return log_file
 
 

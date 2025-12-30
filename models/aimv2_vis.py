@@ -17,10 +17,6 @@ def build_aimv2_vis_components(args, device) -> AimV2VisComponents:
     revision = getattr(args, "pretrained", None) or getattr(args, "revision", None) or "cefb13f21003bdadba65bfbee956c82b976cd23d"
     dtype = torch.float16 if device.type == "cuda" else torch.float32
 
-    # Silence noisy PIL debug logging during dataset builds.
-    logging.getLogger("PIL").setLevel(logging.WARNING)
-    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
-
     logging.info("Loading AIMv2 vision model: %s (rev=%s)", model_id, revision)
     processor = AutoImageProcessor.from_pretrained(model_id, revision=revision, trust_remote_code=True)
     model = AutoModel.from_pretrained(

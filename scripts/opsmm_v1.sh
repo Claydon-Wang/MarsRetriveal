@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Usage: bash scripts/opsmm.sh 0,1  (or export CUDA_VISIBLE_DEVICES beforehand)
+export TORCH_DISTRIBUTED_TIMEOUT=86400
+export TRANSFORMERS_VERBOSITY=error HF_HUB_VERBOSITY=error
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 

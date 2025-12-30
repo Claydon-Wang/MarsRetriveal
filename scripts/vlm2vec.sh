@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Usage: bash scripts/vlm2vec.sh 0,1  (or export CUDA_VISIBLE_DEVICES beforehand)
+export TORCH_DISTRIBUTED_TIMEOUT=86400
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
