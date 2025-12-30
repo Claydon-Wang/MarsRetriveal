@@ -73,6 +73,15 @@ class MarsRetrievalOpsMM(MarsRetrieval):
     batch_size_database = 8
 
 
+@dataclass
+class MarsRetrievalGME(MarsRetrieval):
+    image_encoder_type = "gme"
+    text_encoder_type = "gme"
+    model = "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct"
+    batch_size_database = 4
+    gme_text_instruction = "Find an image that matches the given text."
+
+
 
 # @dataclass
 # class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
