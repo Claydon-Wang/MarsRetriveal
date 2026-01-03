@@ -227,126 +227,6 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             pickle.dump(coordinates, f)
         return shard_paths
 
-    # def build_distributed(self, args, image_encoder, delta: float, rank: int, world_size: int) -> Dict:
-    #     db_dir, thumb_dir = self._resolve_paths(args, delta)
-    #     shard_dir = os.path.join(db_dir, "shards")
-    #     os.makedirs(shard_dir, exist_ok=True)
-
-    #     feature_save_path = os.path.join(db_dir, "features.npy")
-    #     metadata_save_path = os.path.join(db_dir, "metadata.pkl")
-    #     coordinates_save_path = os.path.join(db_dir, "coordinates.pkl")
-
-    #     # --- 0) 全rank一致判断 DB 是否存在（避免 collective 顺序不一致） ---
-    #     local_exists = int(
-    #         os.path.exists(feature_save_path)
-    #         and os.path.exists(metadata_save_path)
-    #         and os.path.exists(coordinates_save_path)
-    #     )
-    #     exists = torch.tensor(local_exists, device="cuda" if torch.cuda.is_available() else "cpu")
-    #     dist.broadcast(exists, src=0)
-    #     exists = int(exists.item())
-
-    #     if exists:
-    #         out = {}
-    #         if rank == 0:
-    #             features = np.load(feature_save_path, mmap_mode="r")
-    #             with open(metadata_save_path, "rb") as f:
-    #                 metadata = pickle.load(f)
-    #             with open(coordinates_save_path, "rb") as f:
-    #                 coordinates = pickle.load(f)
-    #             if getattr(args, "feature_dim", None) is None:
-    #                 args.feature_dim = features.shape[1]
-    #             index = faiss.IndexFlatIP(args.feature_dim)
-    #             # 分块 add，避免一次性复制
-    #             bs = 200000
-    #             for i in range(0, features.shape[0], bs):
-    #                 index.add(np.asarray(features[i:i+bs]))
-    #             out = {"index": index, "metadata": metadata, "coordinates": coordinates,
-    #                 "db_dir": db_dir, "thumb_dir": thumb_dir}
-
-    #         dist.barrier()  # 所有rank对齐一次后一起 return
-    #         return out
-
-    #     # --- 1) 每个rank构建自己的 shard ---
-    #     dataset = MarsBenchmarkDataset(thumb_dir, transform=image_encoder.get_processor())
-    #     indices = list(range(rank, len(dataset), world_size))
-    #     self._build_shard(args, image_encoder, thumb_dir, indices, shard_dir, rank)
-
-    #     print(f"[rank {rank}] before barrier shard", flush=True)
-    #     dist.barrier()  # shard 完成（所有rank）
-    #     print(f"[rank {rank}] after barrier shard", flush=True)
-
-    #     # --- 2) rank0 合并 ---
-    #     out = {}
-    #     if rank == 0:
-    #         feature_paths = [os.path.join(shard_dir, f"features_rank{r}.npy") for r in range(world_size)]
-    #         metadata_paths = [os.path.join(shard_dir, f"metadata_rank{r}.pkl") for r in range(world_size)]
-    #         coord_paths = [os.path.join(shard_dir, f"coordinates_rank{r}.pkl") for r in range(world_size)]
-
-    #         shard_ns = []
-    #         shard_dim = getattr(args, "feature_dim", None)
-    #         for p in feature_paths:
-    #             if os.path.exists(p):
-    #                 arr = np.load(p, mmap_mode="r")
-    #                 shard_ns.append(arr.shape[0])
-    #                 if shard_dim is None and arr.shape[0] > 0:
-    #                     shard_dim = arr.shape[1]
-    #             else:
-    #                 shard_ns.append(0)
-
-    #         total_rows = sum(shard_ns)
-    #         if shard_dim is None:
-    #             shard_dim = args.feature_dim
-    #         args.feature_dim = shard_dim
-    #         D = shard_dim
-
-    #         final = open_memmap(feature_save_path, mode="w+", dtype="float32", shape=(total_rows, D))
-    #         off = 0
-    #         for p, n in zip(feature_paths, shard_ns):
-    #             if n == 0:
-    #                 continue
-    #             part = np.load(p, mmap_mode="r")
-    #             final[off:off+n] = part
-    #             off += n
-    #         del final
-
-    #         metadata, coordinates = [], []
-    #         for mp, cp in zip(metadata_paths, coord_paths):
-    #             if os.path.exists(mp):
-    #                 with open(mp, "rb") as f:
-    #                     metadata.extend(pickle.load(f))
-    #             if os.path.exists(cp):
-    #                 with open(cp, "rb") as f:
-    #                     coordinates.extend(pickle.load(f))
-
-    #         with open(metadata_save_path, "wb") as f:
-    #             pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
-    #         with open(coordinates_save_path, "wb") as f:
-    #             pickle.dump(coordinates, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    #         features = np.load(feature_save_path, mmap_mode="r")
-    #         index = faiss.IndexFlatIP(D)
-    #         bs = 200000
-    #         for i in range(0, total_rows, bs):
-    #             index.add(np.asarray(features[i:i+bs]))
-
-    #         # clean shards
-    #         for p in feature_paths + metadata_paths + coord_paths:
-    #             if os.path.exists(p):
-    #                 os.remove(p)
-    #         try:
-    #             os.rmdir(shard_dir)
-    #         except OSError:
-    #             pass
-
-    #         out = {"index": index, "metadata": metadata, "coordinates": coordinates,
-    #             "db_dir": db_dir, "thumb_dir": thumb_dir}
-
-    #     print(f"[rank {rank}] before barrier merge", flush=True)
-    #     dist.barrier()  # merge 完成（所有rank对齐）
-    #     print(f"[rank {rank}] after barrier merge", flush=True)
-    #     return out
-
     def build_distributed(self, args, image_encoder, delta: float, rank: int, world_size: int) -> Dict:
             import time  # 引入 time 模块用于休眠
             db_dir, thumb_dir = self._resolve_paths(args, delta)
@@ -363,7 +243,13 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 and os.path.exists(metadata_save_path)
                 and os.path.exists(coordinates_save_path)
             )
-            exists = torch.tensor(local_exists, device="cuda" if torch.cuda.is_available() else "cpu")
+
+            if torch.cuda.is_available():
+                dev = torch.device(f"cuda:{torch.cuda.current_device()}")
+            else:
+                dev = torch.device("cpu")
+
+            exists = torch.tensor(local_exists, device=dev, dtype=torch.int32)
             dist.broadcast(exists, src=0)
             exists = int(exists.item())
 
@@ -384,7 +270,7 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                         index.add(np.asarray(features[i:i+bs]))
                     out = {"index": index, "metadata": metadata, "coordinates": coordinates,
                         "db_dir": db_dir, "thumb_dir": thumb_dir}
-                dist.barrier()
+                _barrier()
                 return out
 
             # --- 1) 每个rank构建自己的 shard ---
@@ -392,8 +278,11 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
             indices = list(range(rank, len(dataset), world_size))
             self._build_shard(args, image_encoder, thumb_dir, indices, shard_dir, rank)
 
-            # shard 完成
-            dist.barrier()
+            # shard 完成，写一个本地 flag，让 rank0 轮询所有 shard 是否结束，避免 barrier 超时
+            shard_done = os.path.join(shard_dir, f"shard_done_rank{rank}.flag")
+            with open(shard_done, "w") as f:
+                f.write("done")
+            logging.info(f"Rank {rank} shard done, waiting for merge.")
 
             # --- 2) rank0 合并 (关键修改区域) ---
             out = {}
@@ -403,6 +292,11 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
 
             if rank == 0:
                 try:
+                    # 等待所有 shard 文件就绪，避免因为单个 rank 较慢导致 barrier 超时
+                    all_done = [os.path.join(shard_dir, f"shard_done_rank{r}.flag") for r in range(world_size)]
+                    while not all(os.path.exists(p) for p in all_done):
+                        time.sleep(10)
+
                     logging.info("Rank 0 starting merge...")
                     feature_paths = [os.path.join(shard_dir, f"features_rank{r}.npy") for r in range(world_size)]
                     metadata_paths = [os.path.join(shard_dir, f"metadata_rank{r}.pkl") for r in range(world_size)]
@@ -490,14 +384,24 @@ class MarsDatabaseBuilder(DatasetBuilderBase):
                 logging.info(f"Rank {rank} detected merge done.")
 
             # 这里再用 barrier 确保大家状态一致，此时不会卡死，因为 Rank 0 已经完事了
-            dist.barrier()
+            _barrier()
             
             # Rank 0 负责清理标志文件
             if rank == 0:
                 try:
+                    for r in range(world_size):
+                        done_flag = os.path.join(shard_dir, f"shard_done_rank{r}.flag")
+                        if os.path.exists(done_flag):
+                            os.remove(done_flag)
                     os.remove(flag_file)
                     os.rmdir(shard_dir)
                 except OSError:
                     pass
 
             return out
+
+def _barrier():
+    if torch.cuda.is_available():
+        dist.barrier(device_ids=[torch.cuda.current_device()])
+    else:
+        dist.barrier()

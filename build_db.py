@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import os
 import sys
@@ -8,8 +9,6 @@ import torch.distributed as dist
 
 from configs.config_base import load_static_config
 from tools.utils import _merge_args, _configure_logging, random_seed, _silence_noisy_loggers
-from datasets.utils import build_dataset_distributed
-from models.utils import build_image_encoder
 
 
 def _parse_args():
@@ -37,22 +36,62 @@ def _parse_args():
 
 
 def init_distributed():
-    if not dist.is_initialized():
-        dist.init_process_group(backend="gloo")
-    rank = dist.get_rank()
-    world_size = dist.get_world_size()
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    # torchrun 一定会给这些 env；拿不到说明启动方式不对
+    local_rank = int(os.environ["LOCAL_RANK"])
+    rank = int(os.environ["RANK"])
+    world_size = int(os.environ["WORLD_SIZE"])
+
+    cuda_ok = torch.cuda.is_available()
+    if cuda_ok:
+        torch.cuda.set_device(local_rank)
+        backend = "nccl"
+    else:
+        backend = "gloo"
+
+    timeout_seconds = int(os.getenv("TORCH_DISTRIBUTED_TIMEOUT", "86400"))
+    timeout = datetime.timedelta(seconds=timeout_seconds)
+
+    # 关键：别让“提前 init”悄悄发生
+    if dist.is_initialized():
+        raise RuntimeError(
+            f"Process group already initialized BEFORE init_distributed(). "
+            f"Your timeout/backend won't take effect. "
+            f"(rank={rank}, local_rank={local_rank})"
+        )
+
+    dist.init_process_group(
+        backend="nccl",
+        init_method="env://",
+        timeout=timeout,
+        rank=rank,
+        world_size=world_size,
+        device_id=torch.device(f"cuda:{local_rank}"),
+    )
+
+    print(
+        f"[rank {rank}] init ok: backend={dist.get_backend()} "
+        f"cuda={cuda_ok} local_rank={local_rank} timeout_s={timeout_seconds}",
+        flush=True
+    )
     return rank, world_size, local_rank
 
 
+
 def main():
+    rank, world_size, local_rank = init_distributed()
+
+    if rank == 0:
+        logging.info("Distributed initialized. Backend: %s", dist.get_backend())
+
+    from datasets.utils import build_dataset_distributed
+    from models.utils import build_image_encoder
+
     args_dyn = _parse_args()
     args = load_static_config(args_dyn.config_name, type="retrieval")
     args = _merge_args(args, args_dyn)
 
     _silence_noisy_loggers()
 
-    rank, world_size, local_rank = init_distributed()
     device = torch.device("cuda", local_rank) if torch.cuda.is_available() else torch.device("cpu")
     torch.cuda.set_device(device) if device.type == "cuda" else None
 
@@ -61,7 +100,8 @@ def main():
         _configure_logging(log_dir)
         logging.info("World size: %s", world_size)
         logging.info("Using device: %s", device)
-    dist.barrier()
+        
+    dist.barrier(device_ids=[local_rank])
 
     random_seed(args.seed + rank)
 
@@ -72,9 +112,9 @@ def main():
     if rank == 0:
         logging.info("DB build complete. Saved to %s", result.get("db_dir", ""))
 
-    dist.barrier()
+    logging.info(f"Rank {rank} finished, waiting for others...")
+    dist.barrier(device_ids=[local_rank])
     dist.destroy_process_group()
-
 
 if __name__ == "__main__":
     main()
