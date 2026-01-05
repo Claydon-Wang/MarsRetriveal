@@ -110,7 +110,12 @@ def main():
     random_seed(args.seed + rank)
 
     image_encoder = build_image_encoder(args, device)
-    delta = args_dyn.delta_degree if args_dyn.delta_degree is not None else getattr(args, "delta_degree", 0.2)
+    if args_dyn.delta_degree is not None:
+        delta = args_dyn.delta_degree
+    elif getattr(args, "delta_degree", None) is not None:
+        delta = args.delta_degree
+    else:
+        delta = 0.2
 
     result = build_dataset_distributed(args, image_encoder, delta=delta, rank=rank, world_size=world_size)
     if rank == 0:

@@ -12,7 +12,7 @@ from tools.utils import random_seed, _merge_args, _configure_logging, _validate_
 from datasets.utils import build_dataset
 from evaluators.utils import build_evaluator
 from models.utils import build_image_encoder, build_text_encoder
-from queries.utils import build_geolocalization_query
+from queries.utils import build_query
 from retrievers.utils import build_retriever
 
 
@@ -77,15 +77,16 @@ def main():
         else:
             logging.info("Text encoder disabled.")
 
-    database = build_dataset(args, image_encoder, delta=0.2)
+    delta = args.delta_degree if args.delta_degree is not None else 0.2
+    database = build_dataset(args, image_encoder, delta=delta)
     retriever = build_retriever(args, database)
 
     query_mode = args_dynamic.query_mode
     query_images = args_dynamic.query_images or []
     query_text = args_dynamic.query_text
-    _validate_inputs(query_mode, query_images, query_text)
+    _validate_inputs(query_mode, query_images, query_text, task_name=args.task_name)
 
-    query_features = build_geolocalization_query(
+    query_features = build_query(
         args,
         image_encoder=image_encoder,
         text_encoder=text_encoder,
@@ -94,7 +95,11 @@ def main():
         query_name=query_text,
     )
 
-    results = retriever.search(query_features)
+    if args.task_name == "landform_retrieval":
+        query_features, query_names = query_features
+        results = retriever.search(query_features, query_names=query_names)
+    else:
+        results = retriever.search(query_features)
     df_results = retriever.to_dataframe(results)
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -103,16 +108,15 @@ def main():
     df_results.to_csv(csv_path, index=False)
     logging.info("Saved retrieval results to %s", csv_path)
 
-    evaluator = build_evaluator(
-        args, args.ground_truth_csv, radius_deg=args.radius_deg, max_k=args.eval_max_k
-    )
+    evaluator = build_evaluator(args)
     eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
     if evaluator:
         if eval_summary:
-            logging.info("Evaluation summary: %s", eval_summary["best"])
+            summary_log = eval_summary.get("best", eval_summary)
+            logging.info("Evaluation summary: %s", summary_log)
         headers, row = evaluator.summary(args, args_dynamic, eval_summary)
 
-        summary_dir = os.path.join(args.logs, args.name)
+        summary_dir = os.path.join(args.logs, args.task_name or "default_task")
         os.makedirs(summary_dir, exist_ok=True)
         summary_path = os.path.join(summary_dir, "summary.csv")
         write_header = not os.path.exists(summary_path)

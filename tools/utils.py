@@ -81,6 +81,8 @@ def _merge_args(args, args_dynamic):
         args.db_dir = args_dynamic.db_dir
     if not getattr(args, "db_dir", None):
         delta_val = getattr(args, "delta_degree", 0.2)
+        if delta_val is None:
+            delta_val = 0.2
         if getattr(args_dynamic, "resume_post_train", None):
             parts = args.resume_post_train.strip("/").split("/")[-3:]
             if parts[-1].endswith(".pt"):
@@ -165,7 +167,9 @@ def _configure_logging(output_dir: str):
 
 
 
-def _validate_inputs(query_mode: str, images: List[str], query_text: str):
+def _validate_inputs(query_mode: str, images: List[str], query_text: str, task_name: str = None):
+    if task_name == "landform_retrieval":
+        return
     if query_mode == "image" and not images:
         raise ValueError("Image mode requires --query_images.")
     if query_mode == "text" and not query_text:
