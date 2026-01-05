@@ -76,7 +76,7 @@ class MarsBenchmarkDataset(Dataset):
         return image, image_name
 
 
-class MarsDatabaseBuilder(DatasetBuilderBase):
+class GeoLocalizationDatabaseBuilder(DatasetBuilderBase):
     def _resolve_paths(self, args, delta: float) -> Tuple[str, str]:
         if getattr(args, "db_dir", None):
             db_dir = args.db_dir

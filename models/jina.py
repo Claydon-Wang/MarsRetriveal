@@ -25,9 +25,7 @@ class JinaComponents:
 def build_jina_components(args, device) -> JinaComponents:
     model_id = getattr(args, "model", None) or "jinaai/jina-embeddings-v4"
     dtype = torch.float16 if device.type == "cuda" else torch.float32
-    # Silence noisy PIL debug logs during dataset builds.
-    # logging.getLogger("PIL").setLevel(logging.WARNING)
-    # logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
+
     logging.info("Loading Jina embeddings model: %s", model_id)
     model = AutoModel.from_pretrained(
         model_id,

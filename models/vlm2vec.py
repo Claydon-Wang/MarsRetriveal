@@ -32,14 +32,6 @@ def build_vlm2vec_components(args, device) -> VLM2VecComponents:
     base_model = getattr(args, "model", None) or "VLM2Vec/VLM2Vec-V2.0"
     # Optional fine-tuned checkpoint; defaults to model weights if not provided.
 
-    # Silence noisy PIL debug logs from upstream utilities.
-    # logging.getLogger("PIL").setLevel(logging.WARNING)
-    # logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
-    # logging.getLogger("urllib3").setLevel(logging.WARNING)
-    # logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
-    # logging.getLogger("transformers.utils.hub").setLevel(logging.WARNING)
-    # logging.getLogger("httpx").setLevel(logging.WARNING)
-
     model_args = ModelArguments(
         model_name=base_model,
         pooling="last",

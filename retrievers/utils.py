@@ -1,4 +1,4 @@
-from .faiss_retriever import GeoLocalizationRetriever
+from .geolocalization_retriever import GeoLocalizationRetriever
 
 
 def build_retriever(args, database):

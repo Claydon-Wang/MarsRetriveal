@@ -23,14 +23,6 @@ def build_opsmm_v1_components(args, device) -> OpsMMV1Components:
     model_id = getattr(args, "model", None) or "OpenSearch-AI/Ops-MM-embedding-v1-2B"
     attn_impl = getattr(args, "attn_implementation", None) or "flash_attention_2"
 
-    # Quiet noisy debug logs from dependency stacks.
-    # logging.getLogger("urllib3").setLevel(logging.ERROR)
-    # logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
-    # logging.getLogger("transformers.utils.hub").setLevel(logging.ERROR)
-    # logging.getLogger("httpx").setLevel(logging.ERROR)
-    # logging.getLogger("PIL").setLevel(logging.ERROR)
-    # logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
-
     logging.info("Loading Ops-MM v1 model: %s (attn=%s)", model_id, attn_impl)
     model = OpsMMEmbeddingV1(
         model_name=model_id,

@@ -8,3 +8,7 @@ class EvaluatorBase(ABC):
     @abstractmethod
     def evaluate(self, pred_df, label: str = "run") -> Dict:
         raise NotImplementedError
+
+    @abstractmethod
+    def summary(self, args, args_dynamic, eval_summary: Dict):
+        raise NotImplementedError

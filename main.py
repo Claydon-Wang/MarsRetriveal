@@ -107,56 +107,23 @@ def main():
         args, args.ground_truth_csv, radius_deg=args.radius_deg, max_k=args.eval_max_k
     )
     eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
-    best_f1 = None
-    auprc_score = None
-    if eval_summary:
-        logging.info("Evaluation summary: %s", eval_summary["best"])
-        best = eval_summary.get("best") or {}
-        best_f1 = (
-            round(best.get("f1", 0.0) * 100, 2),
-            round(best.get("precision", 0.0) * 100, 2),
-            round(best.get("recall", 0.0) * 100, 2),
-            best.get("k"),
-        )
-        auprc_score = round(eval_summary.get("auprc", 0.0) * 100, 2) if "auprc" in eval_summary else None
+    if evaluator:
+        if eval_summary:
+            logging.info("Evaluation summary: %s", eval_summary["best"])
+        headers, row = evaluator.summary(args, args_dynamic, eval_summary)
 
-    # Append summary
-    summary_dir = os.path.join(args.logs, args.name)
-    os.makedirs(summary_dir, exist_ok=True)
-    summary_path = os.path.join(summary_dir, "summary.csv")
-    write_header = not os.path.exists(summary_path)
-    with open(summary_path, mode="a", newline="") as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(
-                [
-                    "query_text",
-                    "query_mode",
-                    "model_name",
-                    "pretrained",
-                    "resume_post_train",
-                    "f1",
-                    "precision",
-                    "recall",
-                    "auprc",
-                    "k_at_best",
-                ]
-            )
-        writer.writerow(
-            [
-                args_dynamic.query_text or "",
-                args_dynamic.query_mode,
-                args.model,
-                args.pretrained,
-                args.resume_post_train or "",
-                best_f1[0] if best_f1 else "",
-                best_f1[1] if best_f1 else "",
-                best_f1[2] if best_f1 else "",
-                auprc_score if auprc_score is not None else "",
-                best_f1[3] if best_f1 else "",
-            ]
-        )
-    logging.info("Appended run summary to %s", summary_path)
+        summary_dir = os.path.join(args.logs, args.name)
+        os.makedirs(summary_dir, exist_ok=True)
+        summary_path = os.path.join(summary_dir, "summary.csv")
+        write_header = not os.path.exists(summary_path)
+        with open(summary_path, mode="a", newline="") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(headers)
+            writer.writerow(row)
+        logging.info("Appended run summary to %s", summary_path)
+    else:
+        logging.info("No evaluator available; skipping summary file.")
 
     logging.info("Benchmark run complete.")
 

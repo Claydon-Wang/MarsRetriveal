@@ -99,7 +99,7 @@ def eval_points_coverage(gt_df, pred_df, radius_px=None, radius_deg=None):
     }
 
 
-class CoverageEvaluator(EvaluatorBase):
+class GeoLocalizationEvaluator(EvaluatorBase):
     def __init__(self, gt_csv_path: Optional[str], radius_deg: float = 0.5, max_k: int = 200000, points: int = 100):
         self.radius_deg = radius_deg
         self.max_k = max_k
@@ -158,3 +158,42 @@ class CoverageEvaluator(EvaluatorBase):
         )
 
         return {"best": best, "curve": curve, "auprc": auprc}
+
+    def summary(self, args, args_dynamic, eval_summary: Dict):
+        best_f1 = None
+        auprc_score = None
+        if eval_summary:
+            best = eval_summary.get("best") or {}
+            best_f1 = (
+                round(best.get("f1", 0.0) * 100, 2),
+                round(best.get("precision", 0.0) * 100, 2),
+                round(best.get("recall", 0.0) * 100, 2),
+                best.get("k"),
+            )
+            auprc_score = round(eval_summary.get("auprc", 0.0) * 100, 2) if "auprc" in eval_summary else None
+
+        headers = [
+            "query_text",
+            "query_mode",
+            "model_name",
+            "pretrained",
+            "resume_post_train",
+            "f1",
+            "precision",
+            "recall",
+            "auprc",
+            "k_at_best",
+        ]
+        row = [
+            args_dynamic.query_text or "",
+            args_dynamic.query_mode,
+            args.model,
+            args.pretrained,
+            args.resume_post_train or "",
+            best_f1[0] if best_f1 else "",
+            best_f1[1] if best_f1 else "",
+            best_f1[2] if best_f1 else "",
+            auprc_score if auprc_score is not None else "",
+            best_f1[3] if best_f1 else "",
+        ]
+        return headers, row
