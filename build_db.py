@@ -7,13 +7,15 @@ import sys
 import torch
 import torch.distributed as dist
 
-from configs.config_base import load_static_config
+from configs.config_base import load_task_config, load_model_config, merge_configs
 from tools.utils import _merge_args, _configure_logging, random_seed, _silence_noisy_loggers
 
 
 def _parse_args():
     parser = argparse.ArgumentParser(description="Distributed database builder")
-    parser.add_argument("--config_name", type=str, required=True, help="Static config name.")
+    parser.add_argument("--task_config", type=str, required=True, help="Task config name.")
+    parser.add_argument("--model_config", type=str, required=True, help="Model config name.")
+    parser.add_argument("--task_name", type=str, default=None, help="Task name for module dispatch.")
     parser.add_argument("--model_name", type=str, default=None, help="Model name override.")
     parser.add_argument("--pretrained", type=str, default=None, help="Pretrained tag override.")
     parser.add_argument("--resume_post_train", type=str, default=None, help="Checkpoint for pretrained weights.")
@@ -87,7 +89,9 @@ def main():
     from models.utils import build_image_encoder
 
     args_dyn = _parse_args()
-    args = load_static_config(args_dyn.config_name, type="retrieval")
+    task_cfg = load_task_config(args_dyn.task_config)
+    model_cfg = load_model_config(args_dyn.model_config)
+    args = merge_configs(task_cfg, model_cfg)
     args = _merge_args(args, args_dyn)
 
     _silence_noisy_loggers()

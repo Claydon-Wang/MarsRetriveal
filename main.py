@@ -6,13 +6,13 @@ import csv
 from datetime import datetime
 from typing import List
 import torch
-from configs.config_base import load_static_config
+from configs.config_base import load_task_config, load_model_config, merge_configs
 from tools.utils import random_seed, _merge_args, _configure_logging, _validate_inputs, _silence_noisy_loggers
 
 from datasets.utils import build_dataset
 from evaluators.utils import build_evaluator
 from models.utils import build_image_encoder, build_text_encoder
-from queries.utils import build_query
+from queries.utils import build_geolocalization_query
 from retrievers.utils import build_retriever
 
 
@@ -20,8 +20,10 @@ def _parse_args():
     parser = argparse.ArgumentParser(description="Retrieval benchmark runner")
     # Basic experiment config
     parser.add_argument("--project_name", type=str, default=None, help="Project name for logging.")
+    parser.add_argument("--task_name", type=str, default=None, help="Task name for module dispatch.")
     parser.add_argument("--exp_name", type=str, default=None, help="Experiment name (used under logs/).")
-    parser.add_argument("--config_name", type=str, required=True, help="Static config name.")
+    parser.add_argument("--task_config", type=str, required=True, help="Task config name.")
+    parser.add_argument("--model_config", type=str, required=True, help="Model config name.")
     parser.add_argument("--model_name", type=str, default=None, help="Model name override (supports prefixes like openclip/ or dinov3/).")
     parser.add_argument("--pretrained", type=str, default=None, help="Pretrained tag override.")
     parser.add_argument("--resume_post_train", type=str, default=None, help="Checkpoint for pretrained weights.")
@@ -49,7 +51,9 @@ def _parse_args():
 def main():
     _silence_noisy_loggers()
     args_dynamic = _parse_args()
-    args = load_static_config(args_dynamic.config_name, type="retrieval")
+    task_cfg = load_task_config(args_dynamic.task_config)
+    model_cfg = load_model_config(args_dynamic.model_config)
+    args = merge_configs(task_cfg, model_cfg)
     args = _merge_args(args, args_dynamic)
     if args_dynamic.query_mode in ("text", "hybrid") and args.text_encoder_type == "none":
         raise ValueError("Text or hybrid query modes require a text encoder (text_encoder_type must not be 'none').")
@@ -81,7 +85,7 @@ def main():
     query_text = args_dynamic.query_text
     _validate_inputs(query_mode, query_images, query_text)
 
-    query_features = build_query(
+    query_features = build_geolocalization_query(
         args,
         image_encoder=image_encoder,
         text_encoder=text_encoder,
@@ -100,7 +104,7 @@ def main():
     logging.info("Saved retrieval results to %s", csv_path)
 
     evaluator = build_evaluator(
-        args.ground_truth_csv, radius_deg=args.radius_deg, max_k=args.eval_max_k
+        args, args.ground_truth_csv, radius_deg=args.radius_deg, max_k=args.eval_max_k
     )
     eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
     best_f1 = None

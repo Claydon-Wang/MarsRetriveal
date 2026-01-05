@@ -1,35 +1,36 @@
 #!/usr/bin/env bash
-# Usage: bash scripts/gme.sh 0,1  (or export CUDA_VISIBLE_DEVICES beforehand)
+# Usage: bash scripts/b3_qwen2.sh 0,1  (or export CUDA_VISIBLE_DEVICES beforehand)
 export TORCH_DISTRIBUTED_TIMEOUT=86400
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
-# Hugging Face mirrors/caches (adjust to your environment)
+# Huggingface mirrors/caches
 export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
 export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
 export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
 
-CONFIG_NAME=MarsRetrievalGME
-EXP_NAME=main_exp
+TASK_CONFIG=GlobalGeoLocalization
+MODEL_CONFIG=B3Qwen2
+EXP_NAME=b3_qwen2_exp
 
 # Query settings
 QUERY_MODE=text   # image | text | hybrid
 QUERY_TEXT=yardangs
-QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/image_queries/${QUERY_TEXT}
-GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/dataset/ground_truth/${QUERY_TEXT}.csv
+QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
+GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
 
-# GME model (Qwen2-VL)
-MODEL_NAME=Alibaba-NLP/gme-Qwen2-VL-2B-Instruct
-PRETRAINED=gme
-IMAGE_ENCODER_TYPE=gme
-TEXT_ENCODER_TYPE=gme
+# B3 Qwen2 model (LoRA baked)
+MODEL_NAME=raghavlite/B3_Qwen2_2B
+PRETRAINED=""
+IMAGE_ENCODER_TYPE=vlm2vec
+TEXT_ENCODER_TYPE=vlm2vec
 
-# Optional distributed DB build (skips if DB already exists)
 NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
 if [[ "${NPROC}" -gt 1 ]]; then
   echo "Building DB with torchrun on ${NPROC} GPUs: ${CUDA_VISIBLE_DEVICES}"
   torchrun --nproc_per_node=${NPROC} build_db.py \
-    --config_name "${CONFIG_NAME}" \
+    --task_config "${TASK_CONFIG}" \
+    --model_config "${MODEL_CONFIG}" \
     --exp_name "${EXP_NAME}" \
     --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
     --text_encoder_type "none" \
@@ -37,9 +38,9 @@ if [[ "${NPROC}" -gt 1 ]]; then
     --pretrained "${PRETRAINED}"
 fi
 
-# Run retrieval
 python main.py \
-  --config_name "${CONFIG_NAME}" \
+  --task_config "${TASK_CONFIG}" \
+    --model_config "${MODEL_CONFIG}" \
   --exp_name "${EXP_NAME}" \
   --query_mode "${QUERY_MODE}" \
   --query_text "${QUERY_TEXT}" \
@@ -49,5 +50,3 @@ python main.py \
   --text_encoder_type "${TEXT_ENCODER_TYPE}" \
   --model_name "${MODEL_NAME}" \
   --pretrained "${PRETRAINED}"
-
-# Note: GME requires transformers<4.52.0 (e.g., 4.51.3) because of remote code constraints.

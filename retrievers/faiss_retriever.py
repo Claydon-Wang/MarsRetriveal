@@ -9,7 +9,7 @@ from .base import RetrieverBase
 
 
 @dataclass
-class FaissRetriever(RetrieverBase):
+class GeoLocalizationRetriever(RetrieverBase):
     args: object
     database: Dict
 

@@ -9,6 +9,7 @@ class Config:
     name = "open-clip"
     logs = "./logs/"
     project_name = None
+    task_name = None
     precision = "amp"
     seed = 0
 
@@ -27,17 +28,17 @@ class Config:
     siglip = False
     resume_post_train = None
 
-    # --------------------- Data / DB / Eval ---------------------
+    # --------------------- Task-Specific (override in task configs) ---------------------
     project_dir = None
     database_root = None
-    delta_degree = 0.2
-    workers = 4
-    batch_size_database = 256
-    top_k = 20000
-    eval_max_k = 20000
-    radius_deg = 0.5
+    delta_degree = None
+    workers = None
+    batch_size_database = None
+    top_k = None
+    eval_max_k = None
+    radius_deg = None
     feature_dim = None
-    mix_image_ratio = 0.3
+    mix_image_ratio = None
 
     def __post_init__(self):
         args = self
@@ -45,21 +46,49 @@ class Config:
         args.output_dir = os.path.join(args.logs, args.name)
 
 
-def load_static_config(config_name, type: str = "retrieval"):
-    project_dir = os.path.dirname(__file__)
+def _iter_model_override_attrs(cfg):
+    for name, value in cfg.__class__.__dict__.items():
+        if name.startswith("_"):
+            continue
+        if callable(value):
+            continue
+        yield name
+
+
+def _load_config_from_package(config_name: str, package: str, label: str):
+    base_dir = os.path.dirname(__file__)
+    package_dir = os.path.join(base_dir, package)
     all_configs = {}
-    for file_name in os.listdir(project_dir):
-        if file_name.endswith(".py") and file_name.startswith(f"configs_{type}"):
+    for file_name in os.listdir(package_dir):
+        if file_name.endswith(".py") and not file_name.startswith("__"):
             module_name = file_name[:-3]
-            full_module_name = f"{__package__}.{module_name}"
+            full_module_name = f"{__package__}.{package}.{module_name}"
             module = importlib.import_module(full_module_name)
             for attr_name in dir(module):
-                if attr_name in ["Config"] or attr_name.startswith("__") or attr_name.startswith("configs_static"):
+                if attr_name in ["Config"] or attr_name.startswith("__"):
                     continue
-                if attr_name not in all_configs:
+                obj = getattr(module, attr_name)
+                if isinstance(obj, type) and attr_name not in all_configs:
                     all_configs[attr_name] = module
 
     if config_name not in all_configs:
-        raise KeyError(f"Config {config_name} not found in {type} configs.")
-    config = getattr(all_configs[config_name], config_name)()
-    return config
+        raise KeyError(f"Config {config_name} not found in {label} configs.")
+    return getattr(all_configs[config_name], config_name)()
+
+
+def load_task_config(config_name: str):
+    return _load_config_from_package(config_name, package="task", label="task")
+
+
+def load_model_config(config_name: str):
+    return _load_config_from_package(config_name, package="model", label="model")
+
+
+def merge_configs(task_cfg, model_cfg):
+    if model_cfg is None:
+        return task_cfg
+    for name in _iter_model_override_attrs(model_cfg):
+        value = getattr(model_cfg, name)
+        if value is not None:
+            setattr(task_cfg, name, value)
+    return task_cfg

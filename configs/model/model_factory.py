@@ -1,29 +1,25 @@
 from dataclasses import dataclass
-from .config_base import Config
+from ..config_base import Config
+
 
 @dataclass
-class MarsRetrieval(Config):
-    project_dir = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization"
-    database_root = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_localization/database"
-    logs = "./logs"
-    ground_truth_csv = None
-    seed = 1
-    top_k = 20000
+class OpenCLIP(Config):
+    image_encoder_type = "openclip"
+    text_encoder_type = "openclip"
 
-    def __post_init__(self):
-        super().__post_init__()
-        self.global_img_dir = f"{self.project_dir}/dataset/mars_global.jpg" # Global mosaic image for plotting
 
 @dataclass
-class MarsRetrievalCLIP_MarScope(MarsRetrieval):
-    model = "ViT-L-14-quickgelu" # ViT-L-14-quickgelu
+class CLIPMarScope(Config):
+    image_encoder_type = "openclip"
+    text_encoder_type = "openclip"
+    model = "ViT-L-14-quickgelu"
     pretrained = "dfn2b"
     force_image_size = 512
     force_quick_gelu = True
 
 
 @dataclass
-class MarsRetrievalE5V(MarsRetrieval):
+class E5V(Config):
     image_encoder_type = "e5-v"
     text_encoder_type = "e5-v"
     model = "royokong/e5-v"
@@ -32,7 +28,7 @@ class MarsRetrievalE5V(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalVLM2Vec(MarsRetrieval):
+class VLM2Vec(Config):
     image_encoder_type = "vlm2vec"
     text_encoder_type = "vlm2vec"
     model = "VLM2Vec/VLM2Vec-V2.0"
@@ -40,7 +36,7 @@ class MarsRetrievalVLM2Vec(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalAimV2VL(MarsRetrieval):
+class AimV2VL(Config):
     image_encoder_type = "aimv2_vl"
     text_encoder_type = "aimv2_vl"
     model = "apple/aimv2-large-patch14-224-lit"
@@ -49,7 +45,7 @@ class MarsRetrievalAimV2VL(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalAimV2Vis(MarsRetrieval):
+class AimV2Vis(Config):
     image_encoder_type = "aimv2_vis"
     text_encoder_type = "none"
     model = "apple/aimv2-large-patch14-448"
@@ -58,7 +54,7 @@ class MarsRetrievalAimV2Vis(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalB3Qwen2(MarsRetrieval):
+class B3Qwen2(Config):
     image_encoder_type = "vlm2vec"
     text_encoder_type = "vlm2vec"
     model = "raghavlite/B3_Qwen2_2B"
@@ -66,7 +62,7 @@ class MarsRetrievalB3Qwen2(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalOpsMM(MarsRetrieval):
+class OpsMM(Config):
     image_encoder_type = "opsmm_v1"
     text_encoder_type = "opsmm_v1"
     model = "OpenSearch-AI/Ops-MM-embedding-v1-2B"
@@ -74,7 +70,7 @@ class MarsRetrievalOpsMM(MarsRetrieval):
 
 
 @dataclass
-class MarsRetrievalGME(MarsRetrieval):
+class GME(Config):
     image_encoder_type = "gme"
     text_encoder_type = "gme"
     model = "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct"
@@ -82,13 +78,25 @@ class MarsRetrievalGME(MarsRetrieval):
     gme_text_instruction = "Find an image that matches the given text."
 
 
+@dataclass
+class DinoV3(Config):
+    image_encoder_type = "dinov3"
+    text_encoder_type = "none"
+    model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
+    pretrained = "hf"
 
-# @dataclass
-# class MarsRetrievalCLIP_Pretrained(MarsRetrieval):
-#     model = "ViT-B-16-quickgelu"
-#     pretrained = "openai"
+
+@dataclass
+class BGEVL(Config):
+    image_encoder_type = "bge-vl"
+    text_encoder_type = "bge-vl"
+    model = "BAAI/BGE-VL-large"
+    pretrained = "bge-vl"
 
 
-# @dataclass
-# class MarsRetrievalDinoV3(MarsRetrieval):
-#     model = "facebook/dinov3-vitl16-pretrain-lvd1689m"
+@dataclass
+class Jina(Config):
+    image_encoder_type = "jina"
+    text_encoder_type = "jina"
+    model = "jinaai/jina-embeddings-v4"
+    pretrained = "hf"

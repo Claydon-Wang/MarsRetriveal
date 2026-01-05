@@ -40,6 +40,7 @@ def _merge_args(args, args_dynamic):
     query_mode_in = getattr(args_dynamic, "query_mode", None) or getattr(args, "query_mode", "image")
     args.name = getattr(args_dynamic, "exp_name", None) or f"{query_mode_in}_retrieval"
     args.query_mode = query_mode_in
+    args.task_name = getattr(args_dynamic, "task_name", None) or getattr(args, "task_name", None)
 
     explicit_image_type = getattr(args_dynamic, "image_encoder_type", None)
     args.image_encoder_type = explicit_image_type or getattr(args, "image_encoder_type", "openclip")
@@ -98,6 +99,7 @@ def _merge_args(args, args_dynamic):
         args.output_dir = args_dynamic.output_dir
     else:
         exp_prefix = _slugify(args.name)
+        task_tag = _slugify(args.task_name or "default_task")
         model_tag = _slugify(f"{args.image_encoder_type}_{args.model}")
         pretrained_tag = _slugify(args.pretrained or "pretrained")
         if getattr(args_dynamic, "resume_post_train", None):
@@ -119,7 +121,7 @@ def _merge_args(args, args_dynamic):
             query_tag = "query"
 
         args.output_dir = os.path.join(
-            args.logs, exp_prefix, model_tag, pretrained_tag, resume_tag, query_mode_tag, query_tag
+            args.logs, task_tag, exp_prefix, model_tag, pretrained_tag, resume_tag, query_mode_tag, query_tag
         )
     if getattr(args_dynamic, "radius_deg", None) is not None:
         args.radius_deg = args_dynamic.radius_deg
