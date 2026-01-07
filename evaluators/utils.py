@@ -1,5 +1,6 @@
 from .geolocalization_evaluator import GeoLocalizationEvaluator
 from .landform_retrieval_evaluator import LandformRetrievalEvaluator
+from .cross_modal_matching_evaluator import CrossModalMatchingEvaluator
 
 
 def build_evaluator(args):
@@ -18,4 +19,6 @@ def build_evaluator(args):
             gt_map=getattr(args, "landform_gt", None),
             max_k=getattr(args, "eval_max_k", None),
         )
+    if task_name == "cross_modal_matching":
+        return CrossModalMatchingEvaluator()
     raise ValueError(f"Unsupported task_name for evaluator build: {task_name}")

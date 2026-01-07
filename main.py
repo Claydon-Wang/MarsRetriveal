@@ -70,7 +70,7 @@ def main():
     image_encoder = build_image_encoder(args, device)
     logging.info("Using image encoder: %s (type=%s)", image_encoder.__class__.__name__, args.image_encoder_type)
     text_encoder = None
-    if args_dynamic.query_mode in ("text", "hybrid"):
+    if args.task_name == "cross_modal_matching" or args_dynamic.query_mode in ("text", "hybrid"):
         text_encoder = build_text_encoder(args, device)
         if text_encoder is not None:
             logging.info("Using text encoder: %s (type=%s)", text_encoder.__class__.__name__, args.text_encoder_type)
@@ -78,38 +78,56 @@ def main():
             logging.info("Text encoder disabled.")
 
     delta = args.delta_degree if args.delta_degree is not None else 0.2
-    database = build_dataset(args, image_encoder, delta=delta)
+    if args.task_name == "cross_modal_matching":
+        delta = None
+    database = build_dataset(args, image_encoder, text_encoder=text_encoder, delta=delta)
     retriever = build_retriever(args, database)
 
     query_mode = args_dynamic.query_mode
+    if args.task_name == "cross_modal_matching":
+        query_mode = "cross_modal"
     query_images = args_dynamic.query_images or []
     query_text = args_dynamic.query_text
     _validate_inputs(query_mode, query_images, query_text, task_name=args.task_name)
 
-    query_features = build_query(
-        args,
-        image_encoder=image_encoder,
-        text_encoder=text_encoder,
-        query_mode=query_mode,
-        query_images=query_images,
-        query_name=query_text,
-    )
-
-    if args.task_name == "landform_retrieval":
-        query_features, query_names = query_features
-        results = retriever.search(query_features, query_names=query_names)
+    if args.task_name == "cross_modal_matching":
+        results = retriever.search()
+        df_results = retriever.to_dataframe(results)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        for suffix, df in df_results.items():
+            csv_name = f"{timestamp}_{suffix}.csv"
+            csv_path = os.path.join(output_dir, csv_name)
+            df.to_csv(csv_path, index=False)
+            logging.info("Saved retrieval results to %s", csv_path)
     else:
-        results = retriever.search(query_features)
-    df_results = retriever.to_dataframe(results)
+        query_features = build_query(
+            args,
+            image_encoder=image_encoder,
+            text_encoder=text_encoder,
+            query_mode=query_mode,
+            query_images=query_images,
+            query_name=query_text,
+        )
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    csv_name = f"{timestamp}.csv"
-    csv_path = os.path.join(output_dir, csv_name)
-    df_results.to_csv(csv_path, index=False)
-    logging.info("Saved retrieval results to %s", csv_path)
+        if args.task_name == "landform_retrieval":
+            query_features, query_names = query_features
+            results = retriever.search(query_features, query_names=query_names)
+        else:
+            results = retriever.search(query_features)
+        df_results = retriever.to_dataframe(results)
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        if args.task_name != "landform_retrieval":
+            csv_name = f"{timestamp}.csv"
+            csv_path = os.path.join(output_dir, csv_name)
+            df_results.to_csv(csv_path, index=False)
+            logging.info("Saved retrieval results to %s", csv_path)
 
     evaluator = build_evaluator(args)
-    eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
+    if args.task_name == "cross_modal_matching":
+        eval_summary = evaluator.evaluate(database, label=args.task_name) if evaluator else {}
+    else:
+        eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
     if evaluator:
         if eval_summary:
             summary_log = eval_summary.get("best", eval_summary)
@@ -126,6 +144,25 @@ def main():
                 writer.writerow(headers)
             writer.writerow(row)
         logging.info("Appended run summary to %s", summary_path)
+        if args.task_name == "landform_retrieval":
+            per_class = eval_summary.get("per_class", {}) if eval_summary else {}
+            if per_class:
+                metrics_path = os.path.join(output_dir, f"{timestamp}.csv")
+                with open(metrics_path, mode="w", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["class", "mAP", "recall@1", "recall@5", "recall@10", "precision@10"])
+                    for cls_name, metrics in sorted(per_class.items()):
+                        writer.writerow(
+                            [
+                                cls_name,
+                                round(metrics.get("mAP", 0.0) * 100, 2),
+                                round(metrics.get("recall@1", 0.0) * 100, 2),
+                                round(metrics.get("recall@5", 0.0) * 100, 2),
+                                round(metrics.get("recall@10", 0.0) * 100, 2),
+                                round(metrics.get("precision@10", 0.0) * 100, 2),
+                            ]
+                        )
+                logging.info("Saved per-class metrics to %s", metrics_path)
     else:
         logging.info("No evaluator available; skipping summary file.")
 

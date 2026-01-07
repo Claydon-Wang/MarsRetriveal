@@ -1,5 +1,6 @@
 from .geolocalization_retriever import GeoLocalizationRetriever
 from .landform_retriever import LandformRetriever
+from .cross_modal_matching_retriever import CrossModalMatchingRetriever
 
 
 def build_retriever(args, database):
@@ -8,4 +9,6 @@ def build_retriever(args, database):
         return GeoLocalizationRetriever(args=args, database=database)
     if task_name == "landform_retrieval":
         return LandformRetriever(args=args, database=database)
+    if task_name == "cross_modal_matching":
+        return CrossModalMatchingRetriever(args=args, database=database)
     raise ValueError(f"Unsupported task_name for retriever build: {task_name}")

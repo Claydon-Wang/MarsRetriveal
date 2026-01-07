@@ -11,6 +11,31 @@ class LandformRetrievalEvaluator(EvaluatorBase):
         self.gt_map = gt_map or {}
         self.max_k = max_k
 
+    def _compute_metrics(self, ranked: List[str], gt_set: set) -> Dict[str, float]:
+        hits = 0
+        precisions = []
+        for i, img in enumerate(ranked, start=1):
+            if img in gt_set:
+                hits += 1
+                precisions.append(hits / i)
+        ap = sum(precisions) / len(gt_set) if gt_set else 0.0
+
+        top1 = ranked[:1]
+        top5 = ranked[:5]
+        top10 = ranked[:10]
+        recall1 = 1.0 if set(top1) & gt_set else 0.0
+        recall5 = 1.0 if set(top5) & gt_set else 0.0
+        recall10 = 1.0 if set(top10) & gt_set else 0.0
+        precision10 = len(set(top10) & gt_set) / 10.0
+
+        return {
+            "mAP": ap,
+            "recall@1": recall1,
+            "recall@5": recall5,
+            "recall@10": recall10,
+            "precision@10": precision10,
+        }
+
     def evaluate(self, pred_df, label: str = "run") -> Dict:
         if pred_df.empty:
             logging.warning("Prediction dataframe is empty, skipping evaluation.")
@@ -22,6 +47,7 @@ class LandformRetrievalEvaluator(EvaluatorBase):
         recall5_list: List[float] = []
         recall10_list: List[float] = []
         precision10_list: List[float] = []
+        per_class: Dict[str, Dict[str, float]] = {}
 
         for q in query_names:
             gt_set = self.gt_map.get(q, set())
@@ -31,27 +57,14 @@ class LandformRetrievalEvaluator(EvaluatorBase):
             if self.max_k is not None:
                 df_q = df_q.head(self.max_k)
             ranked = df_q["image_name"].tolist()
-            hits = 0
-            precisions = []
-            for i, img in enumerate(ranked, start=1):
-                if img in gt_set:
-                    hits += 1
-                    precisions.append(hits / i)
-            ap = sum(precisions) / len(gt_set) if gt_set else 0.0
+            metrics = self._compute_metrics(ranked, gt_set)
+            per_class[q] = metrics
 
-            top1 = ranked[:1]
-            top5 = ranked[:5]
-            top10 = ranked[:10]
-            recall1 = 1.0 if set(top1) & gt_set else 0.0
-            recall5 = 1.0 if set(top5) & gt_set else 0.0
-            recall10 = 1.0 if set(top10) & gt_set else 0.0
-            precision10 = len(set(top10) & gt_set) / 10.0
-
-            ap_list.append(ap)
-            recall1_list.append(recall1)
-            recall5_list.append(recall5)
-            recall10_list.append(recall10)
-            precision10_list.append(precision10)
+            ap_list.append(metrics["mAP"])
+            recall1_list.append(metrics["recall@1"])
+            recall5_list.append(metrics["recall@5"])
+            recall10_list.append(metrics["recall@10"])
+            precision10_list.append(metrics["precision@10"])
 
         metrics = {
             "mAP": float(np.mean(ap_list)) if ap_list else 0.0,
@@ -60,6 +73,7 @@ class LandformRetrievalEvaluator(EvaluatorBase):
             "recall@10": float(np.mean(recall10_list)) if recall10_list else 0.0,
             "precision@10": float(np.mean(precision10_list)) if precision10_list else 0.0,
         }
+        metrics["per_class"] = per_class
         logging.info(
             "[%s] mAP=%.4f | Recall@1=%.4f Recall@5=%.4f Recall@10=%.4f Precision@10=%.4f",
             label,

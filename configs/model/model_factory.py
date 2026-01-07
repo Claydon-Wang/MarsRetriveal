@@ -16,6 +16,7 @@ class CLIPMarScope(Config):
     pretrained = "dfn2b"
     force_image_size = 512
     force_quick_gelu = True
+    batch_size_database = 128
 
 
 @dataclass

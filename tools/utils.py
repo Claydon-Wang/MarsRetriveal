@@ -94,7 +94,10 @@ def _merge_args(args, args_dynamic):
         model_tag = str(args.model).replace("/", "_")
         tag = "_".join([model_tag, str(suffix)])
         base_dir = getattr(args, "database_root", None) or getattr(args, "project_dir", ".")
-        args.db_dir = f"{base_dir}/delta_{delta_val}/{tag}"
+        if args.task_name == "cross_modal_matching":
+            args.db_dir = f"{base_dir}/{tag}"
+        else:
+            args.db_dir = f"{base_dir}/delta_{delta_val}/{tag}"
     args.delta_degree = getattr(args, "delta_degree", 0.2)
     # Output dir: structured by model/pretrain/resume/query
     if getattr(args_dynamic, "output_dir", None):
@@ -168,7 +171,7 @@ def _configure_logging(output_dir: str):
 
 
 def _validate_inputs(query_mode: str, images: List[str], query_text: str, task_name: str = None):
-    if task_name == "landform_retrieval":
+    if task_name in ("landform_retrieval", "cross_modal_matching"):
         return
     if query_mode == "image" and not images:
         raise ValueError("Image mode requires --query_images.")

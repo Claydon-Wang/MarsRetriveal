@@ -26,4 +26,6 @@ def build_query(
             text_encoder=text_encoder,
             query_mode=query_mode,
         )
+    if task_name == "cross_modal_matching":
+        raise ValueError("Cross-modal matching does not use build_query; compute retrieval directly.")
     raise ValueError(f"Unsupported task_name for queries: {task_name}")

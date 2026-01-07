@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: bash scripts/landform_retrieval/marscope.sh 0,1,2,3 (or export CUDA_VISIBLE_DEVICES beforehand)
+# Usage: bash scripts/cross_modal_matching/marscope.sh 0,1,2,3 (or export CUDA_VISIBLE_DEVICES beforehand)
 export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
@@ -8,11 +8,9 @@ export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
 export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
 export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
 
-TASK_CONFIG=LandformRetrieval
+TASK_CONFIG=CrossModalMatching
 MODEL_CONFIG=CLIPMarScope
 EXP_NAME=main_exp
-
-QUERY_MODE=text
 
 MODEL_NAME=ViT-L-14-quickgelu
 PRETRAINED=dfn2b
@@ -25,7 +23,7 @@ python main.py \
   --task_config "${TASK_CONFIG}" \
   --model_config "${MODEL_CONFIG}" \
   --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
+  --query_mode "text" \
   --model_name "${MODEL_NAME}" \
   --pretrained "${PRETRAINED}" \
   --resume_post_train "${RESUME_POST_TRAIN}" \

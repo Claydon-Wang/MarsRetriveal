@@ -117,7 +117,7 @@ def _get_opsmm_v1_components(args, device):
 
 def build_image_encoder(args, device) -> ImageEncoderBase:
     task_name = getattr(args, "task_name", None) or "global_geolocalization"
-    if task_name not in ("global_geolocalization", "landform_retrieval"):
+    if task_name not in ("global_geolocalization", "landform_retrieval", "cross_modal_matching"):
         raise ValueError(f"Unsupported task_name for image encoder: {task_name}")
     encoder_type = _infer_image_encoder_type(args)
     if encoder_type == "openclip":
@@ -170,7 +170,7 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
 
 def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
     task_name = getattr(args, "task_name", None) or "global_geolocalization"
-    if task_name not in ("global_geolocalization", "landform_retrieval"):
+    if task_name not in ("global_geolocalization", "landform_retrieval", "cross_modal_matching"):
         raise ValueError(f"Unsupported task_name for text encoder: {task_name}")
     encoder_type = getattr(args, "text_encoder_type", None) or "openclip"
     if encoder_type == "openclip":
