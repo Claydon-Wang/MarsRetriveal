@@ -26,3 +26,11 @@ git clone https://github.com/TIGER-AI-Lab/VLM2Vec.git vlm2vec # for vlm2vec and 
 
 git clone https://huggingface.co/OpenSearch-AI/Ops-MM-embedding-v1-2B ops_mm_embedding # for ops_mm
 ```
+
+```bash
+# for gme
+pip install transformers==4.51.3
+
+# qwen3-vl-embedding
+pip install qwen-vl-utils==0.0.14
+```

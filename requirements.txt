@@ -14,7 +14,7 @@ sentencepiece>=0.1.99
 accelerate>=0.28.0
 einops>=0.7.0
 timm>=0.9.12
-qwen-vl-utils[decord]==0.0.8
+qwen-vl-utils==0.0.14
 scikit-image
 opencv-contrib-python
 opencv-python
