@@ -10,6 +10,7 @@ from .image_encoder.aimv2_vl_image_encoder import AimV2VLImageEncoder
 from .image_encoder.aimv2_vis_image_encoder import AimV2VisImageEncoder
 from .image_encoder.openclip_image_encoder import OpenCLIPImageEncoder
 from .image_encoder.gme_image_encoder import GMEImageEncoder
+from .image_encoder.qwen3_vl_embedding_image_encoder import Qwen3VLEmbeddingImageEncoder
 from .bgevl import BGEVLComponents, build_bgevl_components
 from .e5v import E5VComponents, build_e5v_components
 from .aimv2_vl import AimV2VLComponents, build_aimv2_vl_components
@@ -24,6 +25,7 @@ from .text_encoder.aimv2_vl_text_encoder import AimV2VLTextEncoder
 from .text_encoder.jina_text_encoder import JinaTextEncoder
 from .text_encoder.openclip_text_encoder import OpenCLIPTextEncoder
 from .text_encoder.gme_text_encoder import GMETextEncoder
+from .text_encoder.qwen3_vl_embedding_text_encoder import Qwen3VLEmbeddingTextEncoder
 
 
 def _infer_image_encoder_type(args) -> str:
@@ -45,6 +47,8 @@ def _infer_image_encoder_type(args) -> str:
             return "vlm2vec"
         if "ops-mm" in model.lower() or "ops_mm" in model.lower() or "opensearch-ai" in model.lower():
             return "opsmm_v1"
+        if "qwen3-vl-embedding" in model.lower() or "qwen3_vl_embedding" in model.lower():
+            return "qwen3_vl_embedding"
         if "aimv" in model.lower() or family == "apple":
             if "patch14-448" in model.lower():
                 return "aimv2_vis"
@@ -115,6 +119,14 @@ def _get_opsmm_v1_components(args, device):
     return args._opsmm_v1_components
 
 
+def _get_qwen3_vl_embedding_components(args, device):
+    if getattr(args, "_qwen3_vl_embedding_components", None) is None:
+        from .qwen3_vl_embedding import build_qwen3_vl_embedding_components
+
+        args._qwen3_vl_embedding_components = build_qwen3_vl_embedding_components(args, device)
+    return args._qwen3_vl_embedding_components
+
+
 def build_image_encoder(args, device) -> ImageEncoderBase:
     task_name = getattr(args, "task_name", None) or "global_geolocalization"
     if task_name not in ("global_geolocalization", "landform_retrieval", "cross_modal_matching"):
@@ -161,6 +173,10 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
 
         return OpsMMV1ImageEncoder(components)
 
+    if encoder_type == "qwen3_vl_embedding":
+        components = _get_qwen3_vl_embedding_components(args, device)
+        return Qwen3VLEmbeddingImageEncoder(components)
+
     if encoder_type == "gme":
         components = _get_gme_components(args, device)
         return GMEImageEncoder(components)
@@ -204,6 +220,10 @@ def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
         from .text_encoder.opsmm_v1_text_encoder import OpsMMV1TextEncoder
 
         return OpsMMV1TextEncoder(components)
+
+    if encoder_type == "qwen3_vl_embedding":
+        components = _get_qwen3_vl_embedding_components(args, device)
+        return Qwen3VLEmbeddingTextEncoder(components)
 
     if encoder_type == "aimv2_vis":
         raise ValueError("Text encoder is not available for aimv2-vis (vision-only) models.")
