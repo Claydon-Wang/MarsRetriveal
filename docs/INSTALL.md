@@ -25,6 +25,10 @@ cd third_party
 git clone https://github.com/TIGER-AI-Lab/VLM2Vec.git vlm2vec # for vlm2vec and b3_qwen
 
 git clone https://huggingface.co/OpenSearch-AI/Ops-MM-embedding-v1-2B ops_mm_embedding # for ops_mm
+
+mkdir qwen3_vl_embedding
+cd qwen3_vl_embedding
+wget https://huggingface.co/Qwen/Qwen3-VL-Embedding-2B/raw/main/scripts/qwen3_vl_embedding.py
 ```
 
 ```bash

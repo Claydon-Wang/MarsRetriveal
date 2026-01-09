@@ -33,7 +33,7 @@ class VLM2Vec(Config):
     image_encoder_type = "vlm2vec"
     text_encoder_type = "vlm2vec"
     model = "VLM2Vec/VLM2Vec-V2.0"
-    batch_size_database = 4
+    batch_size_database = 8
 
 
 @dataclass
@@ -59,7 +59,7 @@ class B3Qwen2(Config):
     image_encoder_type = "vlm2vec"
     text_encoder_type = "vlm2vec"
     model = "raghavlite/B3_Qwen2_2B"
-    batch_size_database = 4
+    batch_size_database = 8
 
 
 @dataclass
@@ -68,6 +68,14 @@ class OpsMM(Config):
     text_encoder_type = "opsmm_v1"
     model = "OpenSearch-AI/Ops-MM-embedding-v1-2B"
     batch_size_database = 8
+
+
+@dataclass
+class Qwen3VLEmbedding(Config):
+    image_encoder_type = "qwen3_vl_embedding"
+    text_encoder_type = "qwen3_vl_embedding"
+    model = "Qwen/Qwen3-VL-Embedding-2B"
+    batch_size_database = 16
 
 
 @dataclass
@@ -101,3 +109,4 @@ class Jina(Config):
     text_encoder_type = "jina"
     model = "jinaai/jina-embeddings-v4"
     pretrained = "hf"
+    batch_size_database = 4
