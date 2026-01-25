@@ -147,3 +147,51 @@ def build_geolocalization_query(
         return mixed_query
 
     raise ValueError(f"Unsupported query_mode: {query_mode}")
+
+
+#    # text_inputs = [
+    #     "a Martian alluvial fans formed by fluvial sediment deposition",
+    #     "a fan-shaped sedimentary landform on Mars formed by flowing water",
+    #     "a radial alluvial fans on Mars with distributary channels",
+    #     "an alluvial fans at the base of a Martian crater wall",
+    #     "a subaerial alluvial fans on Mars without a steep frontal scarp"
+    # ]
+
+    # text_inputs = [
+    #     "a Martian glacier-like form formed by ice-rich flow",
+    #     "a lobate glacier-like landform on Mars",
+    #     "a glacier-like form on Mars with flow-like surface textures",
+    #     "a glacier-like form at the base of a Martian slope or crater wall",
+    #     "a debris-covered glacier-like form on Mars"
+    # ]
+
+    # 
+    # text_inputs = [
+    #     "a Martian landslides formed by gravity-driven mass movement",
+    #     "a large rock avalanche landslides on Mars",
+    #     "a landslides deposit on Mars with chaotic hummocky terrain",
+    #     "a landslides at the base of a Martian cliff or canyon wall",
+    #     "a landslides deposit on Mars spreading outward from a steep slope"
+    # ]
+
+    # text_inputs = [
+    #     "a Martian pitted cones with a central crater",
+    #     "a circular cone-shaped landform on Mars with a prominent central pit",
+    #     "a positive-relief pitted cones on Mars with smooth sloping sides",
+    #     "a small conical landform on Mars featuring a summit crater",
+    #     "a symmetric pitted cones landform on the Martian surface"
+    # ]
+
+    # text_inputs = [
+    #     "a Martian yardang formed by wind-driven erosion",
+    #     "an elongated yardang landform on Mars",
+    #     "a yardang on Mars with streamlined ridge morphology",
+    #     "a yardang field on Mars carved into bedrock by aeolian processes",
+    #     "a yardang at the surface of Mars with parallel linear ridges"
+    # ]
+
+    # text_inputs = [
+    # "a photo of pitted cones, a type of martian terrain",
+    # "a satellite photo of pitted cones.",
+    # "a high-resolution remote sensing image of pitted cones on Mars.",
+    # ]

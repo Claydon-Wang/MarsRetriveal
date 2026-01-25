@@ -93,6 +93,9 @@ def _merge_args(args, args_dynamic):
             suffix = args.pretrained or "pretrained"
         model_tag = str(args.model).replace("/", "_")
         tag = "_".join([model_tag, str(suffix)])
+        caption_key = getattr(args, "caption_key", None)
+        if caption_key and args.task_name == "cross_modal_matching":
+            tag = "_".join([tag, f"cap-{_slugify(str(caption_key))}"])
         base_dir = getattr(args, "database_root", None) or getattr(args, "project_dir", ".")
         if args.task_name == "cross_modal_matching":
             args.db_dir = f"{base_dir}/{tag}"
@@ -134,6 +137,8 @@ def _merge_args(args, args_dynamic):
         args.eval_max_k = args_dynamic.eval_max_k
     if getattr(args_dynamic, "ground_truth_csv", None) is not None:
         args.ground_truth_csv = args_dynamic.ground_truth_csv
+    if getattr(args_dynamic, "save_landform_details", False):
+        args.save_landform_details = True
     return args
 
 

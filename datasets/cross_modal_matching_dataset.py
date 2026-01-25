@@ -17,8 +17,26 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class CrossModalWDSDataset(IterableDataset):
-    def __init__(self, tar_paths: List[str]):
+    def __init__(self, tar_paths: List[str], caption_key: str):
         self.tar_paths = tar_paths
+        self.caption_key = caption_key
+
+    def _extract_caption(self, data: Dict, tar_path: str, base: str) -> str:
+        caption = data.get("caption")
+        if isinstance(caption, dict):
+            value = caption.get(self.caption_key)
+            if value:
+                return value
+            raise ValueError(
+                f"Missing caption key '{self.caption_key}' in {tar_path} ({base})"
+            )
+        if isinstance(caption, str):
+            if self.caption_key == "caption" and caption:
+                return caption
+            raise ValueError(
+                f"Expected dict caption for key '{self.caption_key}' in {tar_path} ({base})"
+            )
+        raise ValueError(f"Missing caption field in {tar_path} ({base})")
 
     def _iter_tar(self, tar_path: str):
         with tarfile.open(tar_path) as tar:
@@ -41,8 +59,7 @@ class CrossModalWDSDataset(IterableDataset):
                         data = json.load(f)
                     except json.JSONDecodeError:
                         continue
-                    final_caption = data.get("final_caption", {}) or {}
-                    caption = final_caption.get("fused_caption") or data.get("caption")
+                    caption = self._extract_caption(data, tar_path, base)
                     pending[base]["caption"] = caption
                 else:
                     try:
@@ -75,7 +92,12 @@ class CrossModalMatchingDatabaseBuilder(DatasetBuilderBase):
             base_dir = getattr(args, "database_root", None) or getattr(args, "project_dir", ".")
             suffix = args.pretrained or "pretrained"
             model_tag = str(args.model).replace("/", "_")
-            tag = "_".join([model_tag, str(suffix)])
+            caption_key = getattr(args, "caption_key", None)
+            tag_parts = [model_tag, str(suffix)]
+            if caption_key:
+                safe_caption = str(caption_key).replace("/", "_")
+                tag_parts.append(f"cap_{safe_caption}")
+            tag = "_".join(tag_parts)
             db_dir = f"{base_dir}/{tag}"
         dataset_root = f"{args.project_dir}/dataset"
         return db_dir, dataset_root
@@ -105,7 +127,8 @@ class CrossModalMatchingDatabaseBuilder(DatasetBuilderBase):
                 for fname in os.listdir(dataset_root)
                 if fname.endswith(".tar")
             )
-            dataset = CrossModalWDSDataset(tar_paths)
+            caption_key = getattr(args, "caption_key", None) or "qwen3_fused_caption"
+            dataset = CrossModalWDSDataset(tar_paths, caption_key)
             encoder_collate = getattr(image_encoder, "collate_fn", None)
             preprocess = image_encoder.get_processor()
             total_pairs = 0

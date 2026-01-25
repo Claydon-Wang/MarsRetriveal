@@ -6,19 +6,17 @@ export CUDA_VISIBLE_DEVICES=${1:-${CUDA_VISIBLE_DEVICES:-0}}
 export PATH=~/.conda/envs/retrieval/bin:$PATH
 
 # Huggingface mirrors/caches
-export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
-export HF_HOME=${HF_HOME:-/mnt/sharedata/ssd_large/common/VLMs/}
-export HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-/mnt/sharedata/ssd_large/common/VLMs/datasets/}
+export HF_ENDPOINT=https://hf-mirror.com
+export HF_HOME=/mnt/sharedata/ssd_large/common/VLMs/
+export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
 TASK_CONFIG=GlobalGeoLocalization
 MODEL_CONFIG=Qwen3VLEmbedding
-EXP_NAME=qwen3_vl_embedding_exp
+EXP_NAME=main_exp
 
 # Query settings
 QUERY_MODE=text   # image | text | hybrid
-QUERY_TEXT=yardangs
-QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
-GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # Qwen3-VL embedding
 MODEL_NAME=Qwen/Qwen3-VL-Embedding-2B
@@ -39,15 +37,22 @@ if [[ "${NPROC}" -gt 1 ]]; then
     --pretrained "${PRETRAINED}"
 fi
 
-python main.py \
-  --task_config "${TASK_CONFIG}" \
-    --model_config "${MODEL_CONFIG}" \
-  --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
-  --query_text "${QUERY_TEXT}" \
-  --query_images ${QUERY_IMAGES} \
-  --ground_truth_csv "${GROUND_TRUTH_CSV}" \
-  --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-  --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-  --model_name "${MODEL_NAME}" \
-  --pretrained "${PRETRAINED}"
+
+for QUERY_TEXT in "${QUERY_TEXTS[@]}"; do
+
+QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
+GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+  python main.py \
+    --task_config "${TASK_CONFIG}" \
+      --model_config "${MODEL_CONFIG}" \
+    --exp_name "${EXP_NAME}" \
+    --query_mode "${QUERY_MODE}" \
+    --query_text "${QUERY_TEXT}" \
+    --query_images ${QUERY_IMAGES} \
+    --ground_truth_csv "${GROUND_TRUTH_CSV}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+    --model_name "${MODEL_NAME}" \
+    --pretrained "${PRETRAINED}"
+
+done

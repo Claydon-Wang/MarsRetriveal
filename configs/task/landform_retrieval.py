@@ -5,8 +5,8 @@ from ..config_base import Config
 @dataclass
 class LandformRetrieval(Config):
     task_name = "landform_retrieval"
-    project_dir = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/landform_retrieval"
-    database_root = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/landform_retrieval/database"
+    project_dir = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/landform_retrieval/"
+    database_root = "/mnt/sharedata/ssd_large/Planet/MarsRetrieval/landform_retrieval/database/"
     logs = "./logs"
     seed = 1
     workers = 4

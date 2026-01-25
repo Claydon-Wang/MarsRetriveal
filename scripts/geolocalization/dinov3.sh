@@ -13,9 +13,7 @@ EXP_NAME=main_exp
 
 # query settings
 QUERY_MODE=image   # image (DINOv3 仅支持 image)
-QUERY_TEXT=yardangs  # 用于 ground truth 选择，可用下划线代替空格
-QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
-GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # model / encoder settings (DINOv3)
 IMAGE_ENCODER_TYPE=dinov3
@@ -38,15 +36,22 @@ if [[ "${NPROC}" -gt 1 ]]; then
 fi
 
 # run retrieval
-python main.py \
-  --task_config "${TASK_CONFIG}" \
-    --model_config "${MODEL_CONFIG}" \
-  --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
-  --query_text "${QUERY_TEXT}" \
-  --query_images ${QUERY_IMAGES} \
-  --ground_truth_csv "${GROUND_TRUTH_CSV}" \
-  --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-  --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-  --model_name "${MODEL_NAME}" \
-  --pretrained "${PRETRAINED}" \
+
+for QUERY_TEXT in "${QUERY_TEXTS[@]}"; do
+
+QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
+GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+  python main.py \
+    --task_config "${TASK_CONFIG}" \
+      --model_config "${MODEL_CONFIG}" \
+    --exp_name "${EXP_NAME}" \
+    --query_mode "${QUERY_MODE}" \
+    --query_text "${QUERY_TEXT}" \
+    --query_images ${QUERY_IMAGES} \
+    --ground_truth_csv "${GROUND_TRUTH_CSV}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+    --model_name "${MODEL_NAME}" \
+    --pretrained "${PRETRAINED}"
+
+done
