@@ -30,6 +30,11 @@ def _parse_args():
     parser.add_argument("--output_dir", type=str, default=None, help="Where to store retrieval outputs.")
     parser.add_argument("--top_k", type=int, default=None, help="Top-K retrieval results to keep.")
     parser.add_argument("--db_dir", type=str, default=None, help="Optional database directory override.")
+    parser.add_argument(
+        "--save_details",
+        action="store_true",
+        help="Save detailed retrieval outputs to CSV files.",
+    )
 
     # Query specification
     parser.add_argument("--query_mode", type=str, required=True, help="Query mode: image | text | hybrid.")
@@ -69,6 +74,7 @@ def main():
 
     image_encoder = build_image_encoder(args, device)
     logging.info("Using image encoder: %s (type=%s)", image_encoder.__class__.__name__, args.image_encoder_type)
+
     text_encoder = None
     if args.task_name == "cross_modal_matching" or args_dynamic.query_mode in ("text", "hybrid"):
         text_encoder = build_text_encoder(args, device)
@@ -93,12 +99,6 @@ def main():
     if args.task_name == "cross_modal_matching":
         results = retriever.search()
         df_results = retriever.to_dataframe(results)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        for suffix, df in df_results.items():
-            csv_name = f"{timestamp}_{suffix}.csv"
-            csv_path = os.path.join(output_dir, csv_name)
-            df.to_csv(csv_path, index=False)
-            logging.info("Saved retrieval results to %s", csv_path)
     else:
         query_features = build_query(
             args,
@@ -108,32 +108,18 @@ def main():
             query_images=query_images,
             query_name=query_text,
         )
-
-        if args.task_name == "landform_retrieval":
-            query_features, query_names = query_features
-            results = retriever.search(query_features, query_names=query_names)
-        else:
-            results = retriever.search(query_features)
+        results = retriever.search(query_features)
         df_results = retriever.to_dataframe(results)
-
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        if args.task_name != "landform_retrieval":
-            csv_name = f"{timestamp}.csv"
-            csv_path = os.path.join(output_dir, csv_name)
-            df_results.to_csv(csv_path, index=False)
-            logging.info("Saved retrieval results to %s", csv_path)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    retriever.save_results(output_dir, df_results, timestamp)
 
     evaluator = build_evaluator(args)
-    if args.task_name == "cross_modal_matching":
-        eval_summary = evaluator.evaluate(database, label=args.task_name) if evaluator else {}
-    else:
-        eval_summary = evaluator.evaluate(df_results, label=query_mode) if evaluator else {}
     if evaluator:
+        eval_summary = evaluator.evaluate(df_results, label=query_mode)
         if eval_summary:
             summary_log = eval_summary.get("best", eval_summary)
             logging.info("Evaluation summary: %s", summary_log)
         headers, row = evaluator.summary(args, args_dynamic, eval_summary)
-
         summary_dir = os.path.join(args.logs, args.task_name or "default_task")
         os.makedirs(summary_dir, exist_ok=True)
         summary_path = os.path.join(summary_dir, "summary.csv")
@@ -144,25 +130,7 @@ def main():
                 writer.writerow(headers)
             writer.writerow(row)
         logging.info("Appended run summary to %s", summary_path)
-        if args.task_name == "landform_retrieval":
-            per_class = eval_summary.get("per_class", {}) if eval_summary else {}
-            if per_class:
-                metrics_path = os.path.join(output_dir, f"{timestamp}.csv")
-                with open(metrics_path, mode="w", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["class", "mAP", "recall@1", "recall@5", "recall@10", "precision@10"])
-                    for cls_name, metrics in sorted(per_class.items()):
-                        writer.writerow(
-                            [
-                                cls_name,
-                                round(metrics.get("mAP", 0.0) * 100, 2),
-                                round(metrics.get("recall@1", 0.0) * 100, 2),
-                                round(metrics.get("recall@5", 0.0) * 100, 2),
-                                round(metrics.get("recall@10", 0.0) * 100, 2),
-                                round(metrics.get("precision@10", 0.0) * 100, 2),
-                            ]
-                        )
-                logging.info("Saved per-class metrics to %s", metrics_path)
+        evaluator.save_metrics(output_dir, timestamp, eval_summary)
     else:
         logging.info("No evaluator available; skipping summary file.")
 

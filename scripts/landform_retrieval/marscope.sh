@@ -38,6 +38,5 @@ python main.py \
   --resume_post_train "${RESUME_POST_TRAIN}" \
   --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
   --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-  --save_landform_details
+  --save_details
 done
-

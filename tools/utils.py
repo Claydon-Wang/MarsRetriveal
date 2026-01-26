@@ -137,8 +137,8 @@ def _merge_args(args, args_dynamic):
         args.eval_max_k = args_dynamic.eval_max_k
     if getattr(args_dynamic, "ground_truth_csv", None) is not None:
         args.ground_truth_csv = args_dynamic.ground_truth_csv
-    if getattr(args_dynamic, "save_landform_details", False):
-        args.save_landform_details = True
+    if getattr(args_dynamic, "save_details", False):
+        args.save_details = True
     return args
 
 

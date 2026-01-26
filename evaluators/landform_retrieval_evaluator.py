@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, List
+import os
+import csv
 
 import numpy as np
 
@@ -107,3 +109,24 @@ class LandformRetrievalEvaluator(EvaluatorBase):
             round(eval_summary.get("hit@10", 0.0) * 100, 2) if eval_summary else "",
         ]
         return headers, row
+
+    def save_metrics(self, output_dir: str, timestamp: str, eval_summary: Dict) -> None:
+        per_class = eval_summary.get("per_class", {}) if eval_summary else {}
+        if not per_class:
+            return
+        metrics_path = os.path.join(output_dir, f"{timestamp}.csv")
+        with open(metrics_path, mode="w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["class", "mAP", "recall@1", "recall@5", "recall@10", "precision@10"])
+            for cls_name, metrics in sorted(per_class.items()):
+                writer.writerow(
+                    [
+                        cls_name,
+                        round(metrics.get("mAP", 0.0) * 100, 2),
+                        round(metrics.get("recall@1", 0.0) * 100, 2),
+                        round(metrics.get("recall@5", 0.0) * 100, 2),
+                        round(metrics.get("recall@10", 0.0) * 100, 2),
+                        round(metrics.get("precision@10", 0.0) * 100, 2),
+                    ]
+                )
+        logging.info("Saved per-class metrics to %s", metrics_path)

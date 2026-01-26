@@ -11,7 +11,22 @@ class BGEVLComponents:
     device: torch.device
 
     def encode_text(self, texts, **kwargs):
-        return self.model.encode(text=texts, **kwargs)
+        processor = getattr(self.model, "processor", None)
+        if processor is None:
+            return self.model.encode(text=texts, **kwargs)
+        config = getattr(self.model, "config", None)
+        text_config = getattr(config, "text_config", None)
+        max_len = getattr(text_config, "max_position_embeddings", None)
+        if max_len is None:
+            max_len = getattr(config, "max_position_embeddings", 77)
+        text_inputs = processor(
+            text=texts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=max_len,
+        ).to(self.device)
+        return self.model.encode_text(text_inputs)
 
     def encode_image(self, images, **kwargs):
         return self.model.encode(images=images, **kwargs)

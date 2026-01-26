@@ -10,7 +10,6 @@ from .image_encoder.aimv2_vl_image_encoder import AimV2VLImageEncoder
 from .image_encoder.aimv2_vis_image_encoder import AimV2VisImageEncoder
 from .image_encoder.openclip_image_encoder import OpenCLIPImageEncoder
 from .image_encoder.gme_image_encoder import GMEImageEncoder
-from .image_encoder.qwen3_vl_embedding_image_encoder import Qwen3VLEmbeddingImageEncoder
 from .bgevl import BGEVLComponents, build_bgevl_components
 from .e5v import E5VComponents, build_e5v_components
 from .aimv2_vl import AimV2VLComponents, build_aimv2_vl_components
@@ -25,7 +24,6 @@ from .text_encoder.aimv2_vl_text_encoder import AimV2VLTextEncoder
 from .text_encoder.jina_text_encoder import JinaTextEncoder
 from .text_encoder.openclip_text_encoder import OpenCLIPTextEncoder
 from .text_encoder.gme_text_encoder import GMETextEncoder
-from .text_encoder.qwen3_vl_embedding_text_encoder import Qwen3VLEmbeddingTextEncoder
 
 
 def _infer_image_encoder_type(args) -> str:
@@ -175,6 +173,8 @@ def build_image_encoder(args, device) -> ImageEncoderBase:
 
     if encoder_type == "qwen3_vl_embedding":
         components = _get_qwen3_vl_embedding_components(args, device)
+        from .image_encoder.qwen3_vl_embedding_image_encoder import Qwen3VLEmbeddingImageEncoder
+
         return Qwen3VLEmbeddingImageEncoder(components)
 
     if encoder_type == "gme":
@@ -223,6 +223,8 @@ def build_text_encoder(args, device) -> Optional[TextEncoderBase]:
 
     if encoder_type == "qwen3_vl_embedding":
         components = _get_qwen3_vl_embedding_components(args, device)
+        from .text_encoder.qwen3_vl_embedding_text_encoder import Qwen3VLEmbeddingTextEncoder
+
         return Qwen3VLEmbeddingTextEncoder(components)
 
     if encoder_type == "aimv2_vis":

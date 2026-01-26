@@ -14,7 +14,7 @@ MODEL_CONFIG=B3Qwen2
 EXP_NAME=main_exp
 
 # Query settings
-QUERY_MODE=text   # image | text | hybrid
+QUERY_MODES=(image text)
 QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # B3 Qwen2 model (LoRA baked)
@@ -37,13 +37,15 @@ if [[ "${NPROC}" -gt 1 ]]; then
 fi
 
 
-for QUERY_TEXT in "${QUERY_TEXTS[@]}"; do
+for QUERY_MODE in "${QUERY_MODES[@]}"; do
 
-QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
-GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
-  python main.py \
+  for QUERY_TEXT in "${QUERY_TEXTS[@]}"; do
+
+    QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
+    GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+    python main.py \
     --task_config "${TASK_CONFIG}" \
-      --model_config "${MODEL_CONFIG}" \
+    --model_config "${MODEL_CONFIG}" \
     --exp_name "${EXP_NAME}" \
     --query_mode "${QUERY_MODE}" \
     --query_text "${QUERY_TEXT}" \
@@ -53,5 +55,7 @@ GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocaliz
     --text_encoder_type "${TEXT_ENCODER_TYPE}" \
     --model_name "${MODEL_NAME}" \
     --pretrained "${PRETRAINED}"
+
+  done
 
 done

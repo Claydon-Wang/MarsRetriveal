@@ -14,3 +14,7 @@ class RetrieverBase(ABC):
     @abstractmethod
     def to_dataframe(self, results: Dict) -> pd.DataFrame:
         raise NotImplementedError
+
+    @abstractmethod
+    def save_results(self, output_dir: str, df_results, timestamp: str) -> None:
+        raise NotImplementedError

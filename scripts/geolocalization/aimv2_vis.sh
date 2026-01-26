@@ -45,6 +45,7 @@ GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocaliz
       --model_config "${MODEL_CONFIG}" \
     --exp_name "${EXP_NAME}" \
     --query_mode "${QUERY_MODE}" \
+    --query_text "${QUERY_TEXT}" \
     --query_images ${QUERY_IMAGES} \
     --ground_truth_csv "${GROUND_TRUTH_CSV}" \
     --image_encoder_type "${IMAGE_ENCODER_TYPE}" \

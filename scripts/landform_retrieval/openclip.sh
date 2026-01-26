@@ -16,36 +16,48 @@ EXP_NAME=main_exp
 QUERY_MODE=text
 
 # model (OpenCLIP by default)
-MODEL_NAME=ViT-L-14-quickgelu
-PRETRAINED=dfn2b
-# MODEL_NAME=ViT-L-16-SigLIP-384
-# PRETRAINED=hf-hub:timm/ViT-L-16-SigLIP-384
-# MODEL_NAME=ViT-L-16-SigLIP2-512
-# PRETRAINED=hf-hub:timm/ViT-L-16-SigLIP2-512
+MODEL_NAMES=(
+  ViT-L-14-quickgelu
+  ViT-L-16-SigLIP-384
+  ViT-L-16-SigLIP2-512
+  PE-Core-L-14-336
+)
+PRETRAINEDS=(
+  dfn2b
+  hf-hub:timm/ViT-L-16-SigLIP-384
+  hf-hub:timm/ViT-L-16-SigLIP2-512
+  hf-hub:timm/PE-Core-L-14-336
+)
 
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
 
 NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
-# optional distributed DB build (skips if DB already exists)
-if [[ "${NPROC}" -gt 1 ]]; then
-  torchrun --nproc_per_node=${NPROC} build_db.py \
+
+for IDX in "${!MODEL_NAMES[@]}"; do
+  MODEL_NAME="${MODEL_NAMES[$IDX]}"
+  PRETRAINED="${PRETRAINEDS[$IDX]}"
+
+  # optional distributed DB build (skips if DB already exists)
+  if [[ "${NPROC}" -gt 1 ]]; then
+    torchrun --nproc_per_node=${NPROC} build_db.py \
+      --task_config "${TASK_CONFIG}" \
+      --model_config "${MODEL_CONFIG}" \
+      --exp_name "${EXP_NAME}" \
+      --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+      --text_encoder_type "none" \
+      --model_name "${MODEL_NAME}" \
+      --pretrained "${PRETRAINED}"
+  fi
+
+  # run retrieval
+  python main.py \
     --task_config "${TASK_CONFIG}" \
     --model_config "${MODEL_CONFIG}" \
     --exp_name "${EXP_NAME}" \
-    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-    --text_encoder_type "none" \
+    --query_mode "${QUERY_MODE}" \
     --model_name "${MODEL_NAME}" \
-    --pretrained "${PRETRAINED}"
-fi
-
-# run retrieval
-python main.py \
-  --task_config "${TASK_CONFIG}" \
-  --model_config "${MODEL_CONFIG}" \
-  --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
-  --model_name "${MODEL_NAME}" \
-  --pretrained "${PRETRAINED}" \
-  --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-  --text_encoder_type "${TEXT_ENCODER_TYPE}"
+    --pretrained "${PRETRAINED}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "${TEXT_ENCODER_TYPE}"
+done

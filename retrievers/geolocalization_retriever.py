@@ -4,6 +4,7 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+import os
 
 from .base import RetrieverBase
 
@@ -53,3 +54,11 @@ class GeoLocalizationRetriever(RetrieverBase):
             }
         )
         return df
+
+    def save_results(self, output_dir: str, df_results: pd.DataFrame, timestamp: str) -> None:
+        if not getattr(self.args, "save_details", False):
+            return
+        csv_name = f"{timestamp}.csv"
+        csv_path = os.path.join(output_dir, csv_name)
+        df_results.to_csv(csv_path, index=False)
+        logging.info("Saved retrieval results to %s", csv_path)

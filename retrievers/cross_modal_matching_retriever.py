@@ -3,6 +3,8 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+import os
+import logging
 
 from .base import RetrieverBase
 
@@ -30,6 +32,8 @@ class CrossModalMatchingRetriever(RetrieverBase):
 
         return {
             "keys": keys,
+            "image_features": image_features,
+            "text_features": text_features,
             "i2t": (idx_i2t, dist_i2t),
             "t2i": (idx_t2i, dist_t2i),
         }
@@ -68,4 +72,20 @@ class CrossModalMatchingRetriever(RetrieverBase):
         return {
             "image_to_text": pd.DataFrame(i2t_rows),
             "text_to_image": pd.DataFrame(t2i_rows),
+            "__eval_input__": {
+                "keys": keys,
+                "image_features": results.get("image_features"),
+                "text_features": results.get("text_features"),
+            },
         }
+
+    def save_results(self, output_dir: str, df_results: Dict[str, pd.DataFrame], timestamp: str) -> None:
+        if not getattr(self.args, "save_details", False):
+            return
+        for suffix, df in df_results.items():
+            if not isinstance(df, pd.DataFrame):
+                continue
+            csv_name = f"{timestamp}_{suffix}.csv"
+            csv_path = os.path.join(output_dir, csv_name)
+            df.to_csv(csv_path, index=False)
+            logging.info("Saved retrieval results to %s", csv_path)
