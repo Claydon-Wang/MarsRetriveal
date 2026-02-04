@@ -16,7 +16,6 @@ MODEL_NAME=ViT-L-14-quickgelu
 PRETRAINED=dfn2b
 RESUME_POST_TRAINS=(
   "/mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt"
-  "/mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/post_training/ckpt/v2_mini_20251226_131303_ViT-L-14-quickgelu_dfn2b_None/checkpoints/epoch_latest.pt"
 )
 # /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt
 # /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/post_training/ckpt/v2_mini_20251226_131303_ViT-L-14-quickgelu_dfn2b_None/checkpoints/epoch_latest.pt

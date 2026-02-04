@@ -12,19 +12,40 @@ TASK_CONFIG=CrossModalMatching
 MODEL_CONFIG=OpenCLIP
 EXP_NAME=main_exp
 
+# # model (OpenCLIP by default)
+# MODEL_NAMES=(
+#   ViT-L-14-quickgelu
+#   ViT-L-16-SigLIP-384
+#   ViT-L-16-SigLIP2-512
+#   PE-Core-L-14-336
+# )
+# PRETRAINEDS=(
+#   dfn2b
+#   hf-hub:timm/ViT-L-16-SigLIP-384
+#   hf-hub:timm/ViT-L-16-SigLIP2-512
+#   hf-hub:timm/PE-Core-L-14-336
+# )
+
 # model (OpenCLIP by default)
 MODEL_NAMES=(
-  ViT-L-14-quickgelu
-  ViT-L-16-SigLIP-384
-  ViT-L-16-SigLIP2-512
+  PE-Core-B-16
   PE-Core-L-14-336
+  PE-Core-bigG-14-448
+  ViT-B-16-SigLIP2-512
+  ViT-L-16-SigLIP2-512
+  ViT-SO400M-16-SigLIP2-512
+  ViT-gopt-16-SigLIP2-384
 )
 PRETRAINEDS=(
-  dfn2b
-  hf-hub:timm/ViT-L-16-SigLIP-384
-  hf-hub:timm/ViT-L-16-SigLIP2-512
+  hf-hub:timm/PE-Core-B-16
   hf-hub:timm/PE-Core-L-14-336
+  hf-hub:timm/PE-Core-G-14-448
+  hf-hub:timm/ViT-B-16-SigLIP2-512
+  hf-hub:timm/ViT-L-16-SigLIP2-512
+  hf-hub:timm/ViT-SO400M-16-SigLIP2-512
+  hf-hub:timm/ViT-gopt-16-SigLIP2-384
 )
+
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
 

@@ -19,12 +19,17 @@ PRETRAINED=opsmm
 IMAGE_ENCODER_TYPE=opsmm_v1
 TEXT_ENCODER_TYPE=opsmm_v1
 
-python main.py \
-  --task_config "${TASK_CONFIG}" \
-  --model_config "${MODEL_CONFIG}" \
-  --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
-  --model_name "${MODEL_NAME}" \
-  --pretrained "${PRETRAINED}" \
-  --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-  --text_encoder_type "${TEXT_ENCODER_TYPE}"
+PROMPT_COUNTS=(1 3 5 7 10)
+
+for PROMPT_COUNT in "${PROMPT_COUNTS[@]}"; do
+  python main.py \
+    --task_config "${TASK_CONFIG}" \
+    --model_config "${MODEL_CONFIG}" \
+    --exp_name "${EXP_NAME}_pc${PROMPT_COUNT}" \
+    --query_mode "${QUERY_MODE}" \
+    --model_name "${MODEL_NAME}" \
+    --pretrained "${PRETRAINED}" \
+    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+    --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+    --prompt_count "${PROMPT_COUNT}"
+done

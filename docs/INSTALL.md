@@ -35,6 +35,6 @@ wget https://huggingface.co/Qwen/Qwen3-VL-Embedding-2B/raw/main/scripts/qwen3_vl
 # for gme
 pip install transformers==4.51.3
 
-# qwen3-vl-embedding
+# for qwen3-vl-embedding
 pip install qwen-vl-utils==0.0.14
 ```

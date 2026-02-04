@@ -25,18 +25,22 @@ RESUME_POST_TRAINS=(
 IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
 
+PROMPT_COUNTS=(1 3 5 7 10)
+
 for RESUME_POST_TRAIN in "${RESUME_POST_TRAINS[@]}"; do
   echo "Evaluating model with post-training checkpoint: ${RESUME_POST_TRAIN}"
-  
-python main.py \
-  --task_config "${TASK_CONFIG}" \
-  --model_config "${MODEL_CONFIG}" \
-  --exp_name "${EXP_NAME}" \
-  --query_mode "${QUERY_MODE}" \
-  --model_name "${MODEL_NAME}" \
-  --pretrained "${PRETRAINED}" \
-  --resume_post_train "${RESUME_POST_TRAIN}" \
-  --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-  --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-  --save_details
+  for PROMPT_COUNT in "${PROMPT_COUNTS[@]}"; do
+    python main.py \
+      --task_config "${TASK_CONFIG}" \
+      --model_config "${MODEL_CONFIG}" \
+      --exp_name "${EXP_NAME}_pc${PROMPT_COUNT}" \
+      --query_mode "${QUERY_MODE}" \
+      --model_name "${MODEL_NAME}" \
+      --pretrained "${PRETRAINED}" \
+      --resume_post_train "${RESUME_POST_TRAIN}" \
+      --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+      --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+      --save_details \
+      --prompt_count "${PROMPT_COUNT}"
+  done
 done

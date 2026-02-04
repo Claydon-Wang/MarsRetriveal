@@ -40,6 +40,7 @@ def _parse_args():
     parser.add_argument("--query_mode", type=str, required=True, help="Query mode: image | text | hybrid.")
     parser.add_argument("--query_images", nargs="*", default=None, help="Paths to query images.")
     parser.add_argument("--query_text", type=str, default=None, help="Text query for text/multimodal modes.")
+    parser.add_argument("--prompt_count", type=int, default=3, help="Use first N prompt templates for text queries.")
 
     # Encoders
     parser.add_argument("--image_encoder_type", type=str, default=None, help="Image encoder type (e.g., openclip, dinov3).")

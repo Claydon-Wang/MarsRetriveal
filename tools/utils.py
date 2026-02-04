@@ -73,6 +73,8 @@ def _merge_args(args, args_dynamic):
             args.text_encoder_type = "none"
     if getattr(args_dynamic, "pretrained", None):
         args.pretrained = args_dynamic.pretrained
+    if getattr(args_dynamic, "prompt_count", None) is not None:
+        args.prompt_count = args_dynamic.prompt_count
     if getattr(args_dynamic, "resume_post_train", None):
         args.resume_post_train = args_dynamic.resume_post_train
     if getattr(args_dynamic, "top_k", None):

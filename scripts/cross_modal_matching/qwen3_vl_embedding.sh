@@ -12,7 +12,7 @@ TASK_CONFIG=CrossModalMatching
 MODEL_CONFIG=Qwen3VLEmbedding
 EXP_NAME=main_exp
 
-MODEL_NAME=Qwen/Qwen3-VL-Embedding-2B
+MODEL_NAME=Qwen/Qwen3-VL-Embedding-8B
 PRETRAINED=qwen3_vl_embedding
 IMAGE_ENCODER_TYPE=qwen3_vl_embedding
 TEXT_ENCODER_TYPE=qwen3_vl_embedding

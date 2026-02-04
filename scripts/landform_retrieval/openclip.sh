@@ -17,15 +17,9 @@ QUERY_MODE=text
 
 # model (OpenCLIP by default)
 MODEL_NAMES=(
-  ViT-L-14-quickgelu
-  ViT-L-16-SigLIP-384
-  ViT-L-16-SigLIP2-512
   PE-Core-L-14-336
 )
 PRETRAINEDS=(
-  dfn2b
-  hf-hub:timm/ViT-L-16-SigLIP-384
-  hf-hub:timm/ViT-L-16-SigLIP2-512
   hf-hub:timm/PE-Core-L-14-336
 )
 
@@ -33,6 +27,8 @@ IMAGE_ENCODER_TYPE=openclip
 TEXT_ENCODER_TYPE=openclip
 
 NPROC=$(( $(echo "${CUDA_VISIBLE_DEVICES:-}" | tr -cd ',' | wc -c) + 1 ))
+
+PROMPT_COUNTS=(1 3 5 7 10)
 
 for IDX in "${!MODEL_NAMES[@]}"; do
   MODEL_NAME="${MODEL_NAMES[$IDX]}"
@@ -50,14 +46,17 @@ for IDX in "${!MODEL_NAMES[@]}"; do
       --pretrained "${PRETRAINED}"
   fi
 
-  # run retrieval
-  python main.py \
-    --task_config "${TASK_CONFIG}" \
-    --model_config "${MODEL_CONFIG}" \
-    --exp_name "${EXP_NAME}" \
-    --query_mode "${QUERY_MODE}" \
-    --model_name "${MODEL_NAME}" \
-    --pretrained "${PRETRAINED}" \
-    --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-    --text_encoder_type "${TEXT_ENCODER_TYPE}"
+  # run retrieval (prompt ablation)
+  for PROMPT_COUNT in "${PROMPT_COUNTS[@]}"; do
+    python main.py \
+      --task_config "${TASK_CONFIG}" \
+      --model_config "${MODEL_CONFIG}" \
+      --exp_name "${EXP_NAME}_pc${PROMPT_COUNT}" \
+      --query_mode "${QUERY_MODE}" \
+      --model_name "${MODEL_NAME}" \
+      --pretrained "${PRETRAINED}" \
+      --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+      --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+      --prompt_count "${PROMPT_COUNT}"
+  done
 done
