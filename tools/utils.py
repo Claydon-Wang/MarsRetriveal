@@ -40,6 +40,7 @@ def _merge_args(args, args_dynamic):
     query_mode_in = getattr(args_dynamic, "query_mode", None) or getattr(args, "query_mode", "image")
     args.name = getattr(args_dynamic, "exp_name", None) or f"{query_mode_in}_retrieval"
     args.query_mode = query_mode_in
+    args.query_text = getattr(args_dynamic, "query_text", None)
     args.task_name = getattr(args_dynamic, "task_name", None) or getattr(args, "task_name", None)
 
     explicit_image_type = getattr(args_dynamic, "image_encoder_type", None)

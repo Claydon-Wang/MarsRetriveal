@@ -22,7 +22,6 @@ MODEL_NAME=ViT-L-14-quickgelu
 PRETRAINED=dfn2b
 RESUME_POST_TRAINS=(
   /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt
-  /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/post_training/ckpt/v2_mini_20251226_131303_ViT-L-14-quickgelu_dfn2b_None/checkpoints/epoch_latest.pt
 )
 # /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/ckpt/ViT-L-14-quickgelu_dfn2b/checkpoints/epoch_10.pt
 # /mnt/sharedata/ssd_large/Planet/PlanetCLIP/model/logs/post_training/ckpt/v2_mini_20251226_131303_ViT-L-14-quickgelu_dfn2b_None/checkpoints/epoch_latest.pt
@@ -65,7 +64,8 @@ for RESUME_POST_TRAIN in "${RESUME_POST_TRAINS[@]}"; do
       --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
       --text_encoder_type "${TEXT_ENCODER_TYPE}" \
       --resume_post_train "${RESUME_POST_TRAIN}" \
-      --ground_truth_csv "${GROUND_TRUTH_CSV}"
+      --ground_truth_csv "${GROUND_TRUTH_CSV}" \
+      --save_details
     done
 
   done

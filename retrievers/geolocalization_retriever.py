@@ -58,7 +58,9 @@ class GeoLocalizationRetriever(RetrieverBase):
     def save_results(self, output_dir: str, df_results: pd.DataFrame, timestamp: str) -> None:
         if not getattr(self.args, "save_details", False):
             return
-        csv_name = f"{timestamp}.csv"
+        query_text = getattr(self.args, "query_text", None) or ""
+        safe = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in query_text).strip("_")
+        csv_name = f"{safe}.csv" if safe else f"{timestamp}.csv"
         csv_path = os.path.join(output_dir, csv_name)
         df_results.to_csv(csv_path, index=False)
         logging.info("Saved retrieval results to %s", csv_path)
