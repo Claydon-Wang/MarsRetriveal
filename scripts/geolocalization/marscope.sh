@@ -10,11 +10,13 @@ export HF_DATASETS_CACHE=/mnt/sharedata/ssd_large/common/VLMs/datasets/
 
 TASK_CONFIG=GlobalGeoLocalization
 MODEL_CONFIG=CLIPMarScope
-EXP_NAME=main_exp
+EXP_NAME_BASE=main_exp
 
 # query settings
 QUERY_MODES=(image text) # image / text / hybrid
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(alluvial_fans) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+# evaluation settings
+RADIUS_DEGS=(0.5)
 
 
 # model (OpenCLIP by default)
@@ -48,26 +50,28 @@ for RESUME_POST_TRAIN in "${RESUME_POST_TRAINS[@]}"; do
 
   # run retrieval for each landform
   for QUERY_MODE in "${QUERY_MODES[@]}"; do
-
     for QUERY_TEXT in "${QUERY_TEXTS[@]}"; do
-      QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
-      GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
-      python main.py \
-      --task_config "${TASK_CONFIG}" \
-      --model_config "${MODEL_CONFIG}" \
-      --exp_name "${EXP_NAME}" \
-      --query_mode "${QUERY_MODE}" \
-      --query_text "${QUERY_TEXT}" \
-      --query_images ${QUERY_IMAGES} \
-      --model_name "${MODEL_NAME}" \
-      --pretrained "${PRETRAINED}" \
-      --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
-      --text_encoder_type "${TEXT_ENCODER_TYPE}" \
-      --resume_post_train "${RESUME_POST_TRAIN}" \
-      --ground_truth_csv "${GROUND_TRUTH_CSV}" \
-      --save_details
+      for RADIUS_DEG in "${RADIUS_DEGS[@]}"; do
+        QUERY_IMAGES=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/image_queries/${QUERY_TEXT}
+        GROUND_TRUTH_CSV=/mnt/sharedata/ssd_large/Planet/MarsRetrieval/global_geolocalization/dataset/ground_truth/${QUERY_TEXT}.csv
+        EXP_NAME="${EXP_NAME_BASE}_r${RADIUS_DEG}"
+        python main.py \
+        --task_config "${TASK_CONFIG}" \
+        --model_config "${MODEL_CONFIG}" \
+        --exp_name "${EXP_NAME}" \
+        --query_mode "${QUERY_MODE}" \
+        --query_text "${QUERY_TEXT}" \
+        --query_images ${QUERY_IMAGES} \
+        --model_name "${MODEL_NAME}" \
+        --pretrained "${PRETRAINED}" \
+        --image_encoder_type "${IMAGE_ENCODER_TYPE}" \
+        --text_encoder_type "${TEXT_ENCODER_TYPE}" \
+        --resume_post_train "${RESUME_POST_TRAIN}" \
+        --ground_truth_csv "${GROUND_TRUTH_CSV}" \
+        --radius_deg "${RADIUS_DEG}" \
+        --save_details
+      done
     done
-
   done
   
 done

@@ -13,7 +13,7 @@ EXP_NAME=main_exp
 
 # query settings
 QUERY_MODE=image   # image (DINOv3 仅支持 image)
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # model / encoder settings (DINOv3)
 IMAGE_ENCODER_TYPE=dinov3

@@ -16,7 +16,7 @@ EXP_NAME=main_exp
 
 # Query settings
 QUERY_MODES=(image text)
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # Qwen3-VL embedding
 MODEL_NAME=Qwen/Qwen3-VL-Embedding-2B

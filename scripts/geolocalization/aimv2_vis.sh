@@ -14,7 +14,7 @@ EXP_NAME=main_exp
 
 # Query settings
 QUERY_MODE=image   # image-only retrieval
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # AIMv2 vision-only model
 MODEL_NAME=apple/aimv2-large-patch14-448

@@ -15,7 +15,7 @@ EXP_NAME=main_exp
 
 # Query settings
 QUERY_MODES=(image text)
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # e5-V model (LLaVA-Next backbone)
 MODEL_NAME=royokong/e5-v

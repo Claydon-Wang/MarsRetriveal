@@ -15,7 +15,7 @@ EXP_NAME=main_exp
 
 # Query settings
 QUERY_MODES=(image text)
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 # GME model (Qwen2-VL)
 MODEL_NAME=Alibaba-NLP/gme-Qwen2-VL-2B-Instruct

@@ -12,7 +12,7 @@ EXP_NAME=main_exp
 
 # query settings
 QUERY_MODES=(image text)
-QUERY_TEXTS=(alluvial_fans glacier-like_form landslides pitted_cones yardangs)
+QUERY_TEXTS=(glacier-like_form) # (alluvial_fans glacier-like_form landslides pitted_cones yardangs)
 
 
 # model (OpenCLIP by default)
